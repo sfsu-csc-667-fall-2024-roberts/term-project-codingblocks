@@ -3,7 +3,7 @@
 
 ## Team Members
 
-- Student 1
+- John Carter (nuttycream)
 - Student 2
 - Student 3
 - Student 4
