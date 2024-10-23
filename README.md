@@ -4,6 +4,6 @@
 ## Team Members
 
 - John Carter (nuttycream)
-- Student 2
+- Karina Alvarado Mendoza
 - Student 3
 - Student 4
