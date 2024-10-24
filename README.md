@@ -5,5 +5,5 @@
 
 - John Carter (nuttycream)
 - Karina Alvarado Mendoza
-- Student 3
-- Student 4
+- Randale Reyes
+- Sulav Jung Hamal
