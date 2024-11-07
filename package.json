@@ -4,6 +4,8 @@
   "description": "[![Open in Codespaces](https://classroom.github.com/assets/launch-codespace-2972f46106e565e64193e422d61a12cf1da4916b45550586e14ef0a7c637dd04.svg)](https://classroom.github.com/open-in-codespaces?assignment_repo_id=16613009)\r # CSC 667/867 Fall 2024 Term Project",
   "main": "index.js",
   "scripts": {
+    "build": "webpack",
+    "build:dev": "webpack --mode development --watch",
     "start": "ts-node src/server/index.ts",
     "start:dev": "nodemon --exec ts-node src/server/index.ts",
     "test": "echo \"Error: no test specified\" && exit 0",
@@ -17,12 +19,16 @@
     "@types/express": "^5.0.0",
     "@types/morgan": "^1.9.9",
     "@types/node": "^22.7.8",
+    "@types/webpack": "^5.28.5",
     "husky": "^9.1.6",
     "lint-staged": "^15.2.10",
     "nodemon": "^3.1.7",
     "prettier": "^3.3.3",
+    "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "webpack": "^5.96.1",
+    "webpack-cli": "^5.1.4"
   },
   "dependencies": {
     "cookie-parser": "^1.4.7",
