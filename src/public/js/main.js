@@ -16,7 +16,7 @@
   \****************************/
 /***/ (() => {
 
-eval("\nconsole.log(\"How are you? What are you doing?\");\nconsole.log(\"What else could be said here\");\nconsole.log(\"What else could be said here\");\n\n\n//# sourceURL=webpack://codingblocks/./src/client/main.ts?");
+eval("\nconsole.log(\"Live Reload Test File\");\n\n\n//# sourceURL=webpack://codingblocks/./src/client/main.ts?");
 
 /***/ })
 
