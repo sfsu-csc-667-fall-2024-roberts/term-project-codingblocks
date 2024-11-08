@@ -48,7 +48,8 @@
         "**/*": "prettier --write --ignore-unknown"
     },
     "prettier": {
+        "trailingComma": "all",
         "tabWidth": 4,
-        "semi": false
+        "semi": true
     }
 }
