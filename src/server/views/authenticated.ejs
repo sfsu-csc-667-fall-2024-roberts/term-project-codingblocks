@@ -1,0 +1,24 @@
+<html>
+<head>
+  <title>game</title>
+</head>
+<body>
+  <h1>welcome <%= username %></h1>
+  
+  <div class="lobby">
+    <h2>create lobby</h2>
+    <form action="/api/lobby/create" method="POST">
+      <div>
+        <label for="lobby-name">name:</label>
+        <input type="text" id="lobby-name" name="name" required>
+      </div>
+      <div>
+        <label for="max-players">players:</label>
+        <input type="number" id="max-players" name="maxPlayers" value="4">
+      </div>
+      <button type="submit">Create</button>
+    </form>
+    
+  </div>
+</body>
+</html>

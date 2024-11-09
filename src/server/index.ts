@@ -9,6 +9,7 @@ dotenv.config();
 
 import * as config from "./config";
 import authRoutes from "./routes/auth";
+import lobbyRoutes from "./routes/lobby";
 import { timeMiddleware } from "./middleware/time";
 
 const app = express();
@@ -31,7 +32,8 @@ app.set("view engine", "ejs");
 
 app.get("/", (_req, res) => {
     // todo auth middleware express-session & pg and/orrrr jwt
-    const is_authed = false;
+    // temp to test auth page set to true/false
+    const is_authed = true;
 
     if (is_authed) {
         res.render("authenticated", {
@@ -45,6 +47,7 @@ app.get("/", (_req, res) => {
 
 // api routes
 app.use("/api/auth", authRoutes);
+app.use("/api/lobby", lobbyRoutes);
 
 app.use(
     (
