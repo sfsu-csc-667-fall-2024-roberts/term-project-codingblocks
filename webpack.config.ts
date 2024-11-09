@@ -3,8 +3,7 @@ import path from "path";
 import webpack from "webpack";
 dotenv.config();
 const mode =
-    process.env.NODE_ENV === "production" ?
-    "production" : "development";
+    process.env.NODE_ENV === "production" ? "production" : "development";
 const config: webpack.Configuration = {
     entry: {
         main: path.join(process.cwd(), "src", "client", "main.ts"),
@@ -15,11 +14,13 @@ const config: webpack.Configuration = {
         filename: "[name].js",
     },
     module: {
-        rules: [{
-            test: /\.ts$/,
-            use: "ts-loader",
-            exclude: /node_modules/,
-        }, ],
+        rules: [
+            {
+                test: /\.ts$/,
+                use: "ts-loader",
+                exclude: /node_modules/,
+            },
+        ],
     },
 };
 export default config;
