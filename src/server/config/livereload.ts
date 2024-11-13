@@ -2,11 +2,9 @@ import connectLiveReload from "connect-livereload";
 import type { Express } from "express";
 import livereload from "livereload";
 
-export default (app: Express, staticPath: string) => {
-  console.log(process.env.NODE_ENV);
+const configureLiveReload = (app: Express, staticPath: string) => {
   if (process.env.NODE_ENV === "development") {
     const reloadServer = livereload.createServer();
-
     reloadServer.watch(staticPath);
     reloadServer.server.once("connection", () => {
       setTimeout(() => {
@@ -16,3 +14,5 @@ export default (app: Express, staticPath: string) => {
     app.use(connectLiveReload());
   }
 };
+
+export default configureLiveReload;
