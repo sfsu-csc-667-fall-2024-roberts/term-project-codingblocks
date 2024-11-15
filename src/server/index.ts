@@ -15,8 +15,6 @@ import { timeMiddleware } from "./middleware/time";
 import * as configuration from "./config";
 import * as routes from "./routes";
 
-
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -68,10 +66,8 @@ app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
 
-
 configuration.configureLiveReload(app, staticPath);
 
 app.use("/", routes.home);
-app.use("/lobby", routes.mainLobby);
+app.use("/lobby", routes.lobby);
 app.use("/auth", routes.auth);
-app.use("/games", routes.games);
