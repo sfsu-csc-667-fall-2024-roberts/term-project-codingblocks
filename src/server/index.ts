@@ -12,6 +12,11 @@ import authRoutes from "./routes/auth";
 import lobbyRoutes from "./routes/lobby";
 import { timeMiddleware } from "./middleware/time";
 
+import * as configuration from "./config";
+import * as routes from "./routes";
+
+
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -24,7 +29,7 @@ app.use(timeMiddleware);
 const staticPath = path.join(process.cwd(), "src", "public");
 app.use(express.static(staticPath));
 
-config.livereload(app, staticPath);
+config.configureLiveReload(app, staticPath);
 
 app.use(cookieParser());
 app.set("views", path.join(process.cwd(), "src", "server", "views"));
@@ -62,3 +67,11 @@ app.use(
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+
+
+configuration.configureLiveReload(app, staticPath);
+
+app.use("/", routes.home);
+app.use("/lobby", routes.mainLobby);
+app.use("/auth", routes.auth);
+app.use("/games", routes.games);
