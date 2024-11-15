@@ -27,8 +27,6 @@ app.use(timeMiddleware);
 const staticPath = path.join(process.cwd(), "src", "public");
 app.use(express.static(staticPath));
 
-config.configureLiveReload(app, staticPath);
-
 app.use(cookieParser());
 app.set("views", path.join(process.cwd(), "src", "server", "views"));
 app.set("view engine", "ejs");
@@ -48,9 +46,9 @@ app.get("/", (_req, res) => {
     }
 });
 
-// api routes
-app.use("/api/auth", authRoutes);
-app.use("/api/lobby", lobbyRoutes);
+app.use("/", routes.home);
+app.use("/lobby", routes.lobby);
+app.use("/auth", routes.auth);
 
 app.use(
     (
@@ -67,7 +65,3 @@ app.listen(PORT, () => {
 });
 
 configuration.configureLiveReload(app, staticPath);
-
-app.use("/", routes.home);
-app.use("/lobby", routes.lobby);
-app.use("/auth", routes.auth);
