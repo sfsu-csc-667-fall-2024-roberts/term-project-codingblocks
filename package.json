@@ -16,6 +16,7 @@
     "author": "",
     "license": "ISC",
     "devDependencies": {
+        "@types/bcrypt": "^5.0.2",
         "@types/connect-livereload": "^0.6.3",
         "@types/connect-pg-simple": "^7.0.3",
         "@types/cookie-parser": "^1.4.7",
@@ -39,6 +40,7 @@
         "webpack-cli": "^5.1.4"
     },
     "dependencies": {
+        "bcrypt": "^5.1.1",
         "connect-pg-simple": "^10.0.0",
         "cookie-parser": "^1.4.7",
         "dotenv": "^16.4.5",
