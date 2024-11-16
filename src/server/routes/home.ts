@@ -7,7 +7,11 @@ const router = express.Router();
 // https://stackoverflow.com/a/36226334/17123405
 
 router.get("/", (_req: Request, res: Response) => {
-    res.render("home", { title: "Home page" });
+    res.render("home", {
+        title: "Home page",
+        user: "User",
+        userLoggedIn: false,
+    });
 });
 
 export default router;
