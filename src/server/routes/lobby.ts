@@ -45,4 +45,12 @@ router.get("/get/:id", (req: Request, res: Response) => {
     });
 });
 
+//returns lobby page after login.
+router.get("/", (req: Request, res: Response) => {
+    res.render("games/lobby", {
+        message: "Game lobby after the login.",
+        userLoggedIn: true,
+    });
+});
+
 export default router;

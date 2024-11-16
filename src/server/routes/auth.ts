@@ -1,50 +1,53 @@
 import express from "express";
 import { Request, Response } from "express";
 
+import { Users } from "../db";
+
 const router = express.Router();
 
-// for ejs connection ~
-// https://stackoverflow.com/a/36226334/17123405
+router.get("/login", (req: Request, res: Response) => {
+    res.render("auth/login", { title: "Login", userLoggedIn: false });
+});
 
-// when we use a middleware this will be
-// ("/login", session, (req.... res))
-router.post("/login", (req: Request, res: Response) => {
-    const { email, password } = req.body;
+router.get("/register", (req: Request, res: Response) => {
+    res.render("auth/register", { title: "Register", userLoggedIn: false });
+});
 
-    // todo: for now ima just return some dummy json
-    if (email && password) {
-        res.json({
-            success: true,
-            message: "logged-in",
-            token: "some",
-        });
-    } else {
-        res.status(401).json({
-            success: false,
-            message: "unauthorized",
-        });
+router.post("/register", async (request, response) => {
+    const { username, email, password } = request.body;
+    try {
+        //const user = await Users.register(username, email, password);
+        // @ts-expect-error TODO: Define the session type for the user object
+        //request.session.user = user;
+        request.session.user = { username, email, password };
+        response.redirect("/lobby");
+    } catch (error) {
+        console.error(error);
+        request.flash("error", "Failed to register user");
+        response.redirect("/auth/register");
     }
 });
 
-// when we use a middleware this will be
-// ("/signup", session, (req.... res))
-router.post("/signup", (req: Request, res: Response) => {
-    const { email, password, username } = req.body;
+router.post("/login", async (request, response) => {
+    const { email, password } = request.body;
 
-    // todo: for now ima just return some dummy json
-    if (email && password && username) {
-        res.json({
-            success: true,
-            message: "user created",
-            token: "some",
-            user: { email, username },
-        });
-    } else {
-        res.status(400).json({
-            success: false,
-            message: "email + password + username pls",
-        });
+    try {
+        //const user = await Users.login(email, password);
+        // @ts-expect-error TODO: Define the session type for the user object
+        //request.session.user = user;
+        request.session.user = { email, password };
+        response.redirect("/lobby");
+    } catch (error) {
+        console.error(error);
+        request.flash("error", error as string);
+        response.redirect("/auth/login");
     }
+});
+
+router.get("/logout", (request, response) => {
+    request.session.destroy(() => {
+        response.redirect("/");
+    });
 });
 
 export default router;

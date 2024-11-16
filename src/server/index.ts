@@ -11,6 +11,7 @@ import * as config from "./config";
 import authRoutes from "./routes/auth";
 import lobbyRoutes from "./routes/lobby";
 import { timeMiddleware } from "./middleware/time";
+import authenticationMiddleware from "./middleware/authentication";
 
 import * as configuration from "./config";
 import * as routes from "./routes";
@@ -28,29 +29,16 @@ const staticPath = path.join(process.cwd(), "src", "public");
 app.use(express.static(staticPath));
 
 config.configureLiveReload(app, staticPath);
+config.configureSession(app);
 
 app.use(cookieParser());
 app.set("views", path.join(process.cwd(), "src", "server", "views"));
 app.set("view engine", "ejs");
 
-app.get("/", (_req, res) => {
-    // todo auth middleware express-session & pg and/orrrr jwt
-    // temp to test auth page set to true/false
-    const is_authed = true;
-
-    if (is_authed) {
-        res.render("authenticated", {
-            username: "user",
-            lobbies: [],
-        });
-    } else {
-        res.render("unauthenticated");
-    }
-});
-
 // api routes
-app.use("/api/auth", authRoutes);
-app.use("/api/lobby", lobbyRoutes);
+app.use("/", routes.home);
+app.use("/auth", routes.auth);
+app.use("/lobby", authenticationMiddleware, routes.lobby);
 
 app.use(
     (
@@ -65,9 +53,3 @@ app.use(
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
-
-configuration.configureLiveReload(app, staticPath);
-
-app.use("/", routes.home);
-app.use("/lobby", routes.lobby);
-app.use("/auth", routes.auth);

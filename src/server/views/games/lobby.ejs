@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Game Lobby</title>
+        <link rel="stylesheet" href="/stylesheets/style.css" />
+    </head>
+    <body>
+        <%- include('../partials/navbar.ejs') %>
+        <!-- Include the navbar partial -->
+
+        <div class="lobby-container">
+            <h2>Welcome to the Poker Lobby</h2>
+
+            <p><%= message %></p>
+
+            <div class="game-options">
+                <h3>Choose a game to start</h3>
+                <ul>
+                    <li><a href="/games/start-poker">Start Poker Game</a></li>
+                    <li>
+                        <a href="/games/start-blackjack"
+                            >Start Blackjack Game</a
+                        >
+                    </li>
+                    <li><a href="/games/settings">Game Settings</a></li>
+                </ul>
+            </div>
+        </div>
+    </body>
+</html>
