@@ -36,20 +36,6 @@ app.set("view engine", "ejs");
 app.use("/", routes.home);
 app.use("/auth", routes.auth);
 app.use("/lobby", authenticationMiddleware, routes.lobby);
-app.get("/", (_req, res) => {
-    // todo auth middleware express-session & pg and/orrrr jwt
-    // temp to test auth page set to true/false
-    const is_authed = true;
-
-    if (is_authed) {
-        res.render("authenticated", {
-            username: "user",
-            lobbies: [],
-        });
-    } else {
-        res.render("unauthenticated");
-    }
-});
 
 app.use(
     (
