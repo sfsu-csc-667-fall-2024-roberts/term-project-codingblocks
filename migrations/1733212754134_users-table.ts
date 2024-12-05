@@ -14,6 +14,10 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
             notNull: true,
             unique: true,
         },
+        gravatar: {
+            type: "varchar(100)",
+            notNull: true,
+        },
         password: {
             type: "varchar(255)",
             notNull: true,
