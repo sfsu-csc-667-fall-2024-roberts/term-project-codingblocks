@@ -7,7 +7,6 @@ type User = {
     id: number;
     username: string;
     email: string;
-    gravatar: string;
 };
 
 type UserWithPassword = User & {

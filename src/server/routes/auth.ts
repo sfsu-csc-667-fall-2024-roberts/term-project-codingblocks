@@ -16,10 +16,9 @@ router.get("/register", (req: Request, res: Response) => {
 router.post("/register", async (request, response) => {
     const { username, email, password } = request.body;
     try {
-        //const user = await Users.register(username, email, password);
+        const user = await Users.register(username, email, password);
         // @ts-expect-error TODO: Define the session type for the user object
-        //request.session.user = user;
-        request.session.user = { username, email, password };
+        request.session.user = user;
         response.redirect("/lobby");
     } catch (error) {
         console.error(error);
@@ -32,10 +31,9 @@ router.post("/login", async (request, response) => {
     const { email, password } = request.body;
 
     try {
-        //const user = await Users.login(email, password);
+        const user = await Users.login(email, password);
         // @ts-expect-error TODO: Define the session type for the user object
-        //request.session.user = user;
-        request.session.user = { email, password };
+        request.session.user = user;
         response.redirect("/lobby");
     } catch (error) {
         console.error(error);
