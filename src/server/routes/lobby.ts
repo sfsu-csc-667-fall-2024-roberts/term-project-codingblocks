@@ -1,47 +1,61 @@
 import express from "express";
 import { Request, Response } from "express";
+import { createGame, joinGame, get } from "../db/games/";
 
 const router = express.Router();
 
-router.post("/create", (req: Request, res: Response) => {
+router.post("/create", async (req: Request, res: Response) => {
     const { name, maxPlayers } = req.body;
 
-    // todo:
+    if (!name) {
+        res.status(400).json({
+            success: false,
+            message: "name required to make lobby",
+        });
+    }
 
-    if (name) {
+    try {
+        // @ts-expect-error
+        const { id: userId } = req.session.user;
+
+        // screw it just join immediately after.... for now
+        // TODO:
+        const game = await createGame();
+        await joinGame(game.id, userId);
+
         res.json({
             success: true,
-            message: "lobby created",
+            message: "Game lobby created",
             lobby: {
-                id: Math.random().toString(36).substring(7),
+                id: game.id,
                 name,
                 maxPlayers: maxPlayers || 4,
                 players: [],
             },
         });
-    } else {
-        res.status(400).json({
+    } catch (err) {
+        console.error("failed to create lobby", err);
+        res.status(500).json({
             success: false,
-            message: "failed to make lobyy",
+            message: "somehow failed to create game",
         });
     }
 });
 
 // returns lobby info
-router.get("/get/:id", (req: Request, res: Response) => {
+router.get("/:gameId", async (req: Request, res: Response) => {
     const { id } = req.params;
 
-    // todo:
+    // @ts-expect-error
+    const { id: userId } = req.session.user;
+
+    const game = await get(parseInt(id, 10), userId);
 
     res.json({
-        success: true,
-        message: "lobby",
-        lobby: {
-            id,
-            name: "1",
-            maxPlayers: 4,
-            players: [],
-        },
+        title: `Game ${id}`,
+        id,
+        game,
+        userId,
     });
 });
 
