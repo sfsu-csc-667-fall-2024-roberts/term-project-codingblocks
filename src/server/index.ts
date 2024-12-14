@@ -26,7 +26,11 @@ const staticPath = path.join(process.cwd(), "src", "public");
 app.use(express.static(staticPath));
 
 configuration.configureLiveReload(app, staticPath);
-configuration.configureSession(app);
+configuration.configureSocketIO(
+    server,
+    app,
+    configuration.configureSession(app),
+);
 
 app.use(cookieParser());
 app.set("views", path.join(process.cwd(), "src", "server", "views"));
