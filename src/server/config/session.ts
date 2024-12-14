@@ -5,7 +5,7 @@ import session from "express-session";
 
 let sessionMiddleware: RequestHandler | undefined = undefined;
 
-export default (app: Express): RequestHandler | undefined => {
+export default (app: Express): RequestHandler => {
     if (sessionMiddleware === undefined) {
         sessionMiddleware = session({
             store: new (connectPgSimple(session))({
@@ -15,8 +15,10 @@ export default (app: Express): RequestHandler | undefined => {
             resave: true,
             saveUninitialized: true,
         });
+
         app.use(sessionMiddleware);
         app.use(flash());
     }
+
     return sessionMiddleware;
 };
