@@ -8,11 +8,11 @@ import {
     ALL_PLAYER_DATA,
 } from "./sql";
 
-export const createGame = async (): Promise<{ id: number }> => {
+const createGame = async (): Promise<{ id: number }> => {
     return await db.one(CREATE_GAME);
 };
 
-export const get = async (gameId: number, playerId: number) => {
+const get = async (gameId: number, playerId: number) => {
     const currentSeat = await db.one(
         "SELECT current_seat FROM games WHERE id=$1",
         gameId,
@@ -27,7 +27,7 @@ export const get = async (gameId: number, playerId: number) => {
     };
 };
 
-export const getPlayers = async (
+const getPlayers = async (
     gameId: number,
 ): Promise<
     {
@@ -49,21 +49,31 @@ export const getPlayers = async (
     return await db.any(ALL_PLAYER_DATA, [gameId]);
 };
 
-export const joinGame = async (
+const joinGame = async (
     gameId: number,
     userId: number,
 ): Promise<{ game_id: number; user_id: number; seat: number }> => {
     return await db.one(ADD_PLAYER, [gameId, userId]);
 };
 
-export const getPlayerHand = async (gameId: number, userId: number) => {
+const getPlayerHand = async (gameId: number, userId: number) => {
     return await db.any(GET_PLAYER_HAND, [gameId, userId]);
 };
 
-export const drawCard = async (gameId: number, userId: number) => {
+const drawCard = async (gameId: number, userId: number) => {
     return await db.one(DRAW_CARD, [gameId, userId]);
 };
 
-export const updateGameState = async (gameId: number, showing: boolean) => {
+const updateGameState = async (gameId: number, showing: boolean) => {
     return db.none(UPDATE_GAME_STATE, [showing, gameId]);
+};
+
+export default {
+    createGame,
+    get,
+    getPlayers,
+    joinGame,
+    getPlayerHand,
+    drawCard,
+    updateGameState,
 };

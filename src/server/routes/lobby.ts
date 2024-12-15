@@ -1,6 +1,6 @@
 import express from "express";
 import { Request, Response } from "express";
-import { createGame, joinGame, get } from "../db/games/";
+import { Games } from "../db";
 
 const router = express.Router();
 
@@ -20,12 +20,12 @@ router.post("/create", async (req: Request, res: Response) => {
 
         // screw it just join immediately after.... for now
         // TODO:
-        const game = await createGame();
-        await joinGame(game.id, userId);
+        const game = await Games.createGame();
+        await Games.joinGame(game.id, userId);
 
         res.json({
             success: true,
-            message: "Game lobby created",
+            message: "Games lobby created",
             lobby: {
                 id: game.id,
                 name,
@@ -49,10 +49,10 @@ router.get("/:gameId", async (req: Request, res: Response) => {
     // @ts-expect-error
     const { id: userId } = req.session.user;
 
-    const game = await get(parseInt(id, 10), userId);
+    const game = await Games.get(parseInt(id, 10), userId);
 
     res.json({
-        title: `Game ${id}`,
+        title: `Games ${id}`,
         id,
         game,
         userId,
@@ -60,9 +60,9 @@ router.get("/:gameId", async (req: Request, res: Response) => {
 });
 
 //returns lobby page after login.
-router.get("/", (req: Request, res: Response) => {
+router.get("/", (_req: Request, res: Response) => {
     res.render("games/lobby", {
-        message: "Game lobby after the login.",
+        message: "Games lobby after the login.",
         userLoggedIn: true,
     });
 });
