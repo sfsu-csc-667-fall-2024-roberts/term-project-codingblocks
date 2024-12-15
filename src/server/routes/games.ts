@@ -9,16 +9,28 @@ router.get("/:gameId", async (req, res) => {
 
     try {
         const gameData = await Games.getGameDetails(Number(gameId));
-        res.render("games/game", {
+
+        if (!gameData) {
+            return res.status(404).render("error", {
+                message: "Game not found",
+                error: { status: 404 },
+            });
+        }
+
+        return res.render("games/game", {
             title: `Game ${gameId}`,
             gameId,
             pot: gameData.pot,
             currentTurn: gameData.currentTurn,
             playerHand: gameData.playerHand,
+            userLoggedIn: true,
         });
     } catch (error) {
         console.error(error);
-        res.status(500).send("Failed to load game");
+        return res.status(500).render("error", {
+            message: "Failed to load game",
+            error: { status: 500 },
+        });
     }
 });
 

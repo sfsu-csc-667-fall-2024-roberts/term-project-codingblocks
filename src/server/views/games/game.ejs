@@ -1,23 +1,35 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game <%= gameId %></title>
-    <link rel="stylesheet" href="/stylesheets/style.css">
-</head>
-<body>
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Game Lobby</title>
+        <link rel="stylesheet" href="/stylesheets/style.css" />
+    </head>
+    <body>
     <%- include('../partials/navbar.ejs') %>
     <div class="game-container">
         <h1>Game <%= gameId %></h1>
-        <p>Pot: <%= pot %></p>
-        <p>Current Turn: <%= currentTurn %></p>
-        <h2>Your Hand:</h2>
-        <ul>
-            <% playerHand.forEach(card => { %>
-                <li><%= card.face_value %> of <%= card.suit %></li>
-            <% }); %>
-        </ul>
+        <% if (typeof error !== 'undefined') { %>
+            <div class="error"><%= error %></div>
+        <% } %>
+        <div class="game-info">
+            <p>Pot: $<%= pot %></p>
+            <p>Current Turn: <%= currentTurn %></p>
+        </div>
+        <div class="player-hand">
+            <h2>Your Hand:</h2>
+            <% if (playerHand && playerHand.length > 0) { %>
+                <ul>
+                    <% playerHand.forEach(card => { %>
+                        <li><%= card.face_value %> of <%= card.suit %></li>
+                    <% }); %>
+                </ul>
+            <% } else { %>
+                <p>Waiting for cards to be dealt...</p>
+            <% } %>
+        </div>
     </div>
 </body>
 </html>
