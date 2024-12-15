@@ -10,6 +10,9 @@ import {
     PLAY_CARD,
     SHUFFLE_DISCARD_PILE,
     GET_GAME_DETAILS,
+    IS_CURRENT,
+    GET_LAST_DRAW_TURN,
+    UPDATE_PLAYER_DRAW_TURN,
 } from "./sql";
 
 const createGame = async (): Promise<{ id: number }> => {
@@ -88,10 +91,33 @@ const shuffleDiscardPile = async (gameId: number) => {
     return await db.none(SHUFFLE_DISCARD_PILE, [gameId]);
 };
 
+const getTurn = async (gameId: number) => {
+    return db.one("SELECT turn FROM games WHERE id = $1", gameId);
+};
+
+const isCurrentPlayer = async (
+    gameId: number,
+    userId: number,
+): Promise<{ is_current_player: boolean }> => {
+    return await db.one(IS_CURRENT, [gameId, userId]);
+};
+
+const getLastDrawTurn = async (
+    gameId: number,
+    userId: number,
+): Promise<{ last_draw_turn: number }> => {
+    return await db.one(GET_LAST_DRAW_TURN, [gameId, userId]);
+};
+
+const updatePlayerDrawTurn = async (gameId: number, userId: number) => {
+    return db.none(UPDATE_PLAYER_DRAW_TURN, [gameId, userId]);
+};
+
 export default {
     createGame,
     get,
     getGameDetails,
+    getTurn,
     getPlayers,
     joinGame,
     getPlayerHand,
@@ -100,4 +126,7 @@ export default {
     dealCards,
     playCard,
     shuffleDiscardPile,
+    isCurrentPlayer,
+    getLastDrawTurn,
+    updatePlayerDrawTurn,
 };

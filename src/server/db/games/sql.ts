@@ -117,3 +117,15 @@ export const GET_GAME_DETAILS = `
   FROM games
   WHERE id = $1;
 `;
+
+export const GET_LAST_DRAW_TURN = `
+SELECT last_draw_turn 
+FROM game_users 
+WHERE game_id=$1 
+  AND user_id=$2`;
+
+export const UPDATE_PLAYER_DRAW_TURN = `
+UPDATE game_users 
+SET last_draw_turn = (SELECT turn FROM games WHERE id=$1) 
+WHERE game_id=$1 
+  AND user_id=$2`;
