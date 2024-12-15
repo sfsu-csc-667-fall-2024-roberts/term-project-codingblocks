@@ -40,6 +40,7 @@ app.set("view engine", "ejs");
 app.use("/", routes.home);
 app.use("/auth", routes.auth);
 app.use("/lobby", middleware.authentication, routes.lobby);
+app.use("/games", middleware.authentication, routes.games);
 
 app.use(
     (
