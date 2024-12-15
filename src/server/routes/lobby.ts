@@ -42,23 +42,6 @@ router.post("/create", async (req: Request, res: Response) => {
     }
 });
 
-// returns lobby info
-router.get("/:gameId", async (req: Request, res: Response) => {
-    const { id } = req.params;
-
-    // @ts-expect-error
-    const { id: userId } = req.session.user;
-
-    const game = await Games.get(parseInt(id, 10), userId);
-
-    res.json({
-        title: `Games ${id}`,
-        id,
-        game,
-        userId,
-    });
-});
-
 //returns lobby page after login.
 router.get("/", (_req: Request, res: Response) => {
     res.render("games/lobby", {
