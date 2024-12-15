@@ -1,14 +1,5 @@
-import pgPromise from "pg-promise";
-import dotenv from "dotenv";
+import pgp from "pg-promise";
 
-// Load environment variables
-dotenv.config();
+const connection = pgp()(process.env.DATABASE_URL!);
 
-// Initialize pg-promise
-const pgp = pgPromise();
-
-// Create the database connection using the `DATABASE_URL` from environment variables
-const connection = pgp(process.env.DATABASE_URL!);
-
-// Export the database connection
 export default connection;
