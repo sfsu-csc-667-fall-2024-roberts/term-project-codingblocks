@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game <%= gameId %></title>
+    <link rel="stylesheet" href="/stylesheets/style.css">
+</head>
+<body>
+    <%- include('../partials/navbar.ejs') %>
+    <div class="game-container">
+        <h1>Game <%= gameId %></h1>
+        <p>Pot: <%= pot %></p>
+        <p>Current Turn: <%= currentTurn %></p>
+        <h2>Your Hand:</h2>
+        <ul>
+            <% playerHand.forEach(card => { %>
+                <li><%= card.face_value %> of <%= card.suit %></li>
+            <% }); %>
+        </ul>
+    </div>
+</body>
+</html>
