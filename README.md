@@ -54,3 +54,14 @@ in the `.env` file at the root directory of the project
 # database connection
 DATABASE_URL=postgres://codingblocks:student:5432/pgdb
 ```
+
+### setting up the db for the webapp
+
+to actually have the webapp communicate with the db, we still need to setup the schema, tables, etc
+run  this command in the root dir of the project
+```shell
+npm run db:migrate
+```
+
+you should get an final message that migrations are completed.
+to test, register and login through the webapp
