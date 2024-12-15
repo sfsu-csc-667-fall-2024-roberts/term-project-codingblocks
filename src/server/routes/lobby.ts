@@ -18,21 +18,10 @@ router.post("/create", async (req: Request, res: Response) => {
         // @ts-expect-error
         const { id: userId } = req.session.user;
 
-        // screw it just join immediately after.... for now
-        // TODO:
+        // TODO: IMPLEMENT MAX PLAYERS IN createGame()
         const game = await Games.createGame();
         await Games.joinGame(game.id, userId);
-
-        res.json({
-            success: true,
-            message: "Games lobby created",
-            lobby: {
-                id: game.id,
-                name,
-                maxPlayers: maxPlayers || 4,
-                players: [],
-            },
-        });
+        return res.redirect(`/games/${game.id}`);
     } catch (err) {
         console.error("failed to create lobby", err);
         res.status(500).json({
