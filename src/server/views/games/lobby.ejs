@@ -9,24 +9,35 @@
     </head>
     <body>
         <%- include('../partials/navbar.ejs') %>
-        <!-- Include the navbar partial -->
 
-        <div class="lobby-container">
-            <h2>Welcome to the Poker Lobby</h2>
-
-            <p><%= message %></p>
-
-            <div class="game-options">
-                <h3>Choose a game to start</h3>
-                <ul>
-                    <li><a href="/games/start-poker">Start Poker Game</a></li>
-                    <li>
-                        <a href="/games/start-blackjack"
-                            >Start Blackjack Game</a
-                        >
-                    </li>
-                    <li><a href="/games/settings">Game Settings</a></li>
-                </ul>
+        <div class="outsideContainer">
+            <div class="container">
+                <h1>Game Main Menu</h1>
+                <div class="lobby">
+                    <h2>Create New Game</h2>
+                    <form action="/lobby/create" method="POST">
+                        <div>
+                            <label for="lobby-name">Lobby Name:</label>
+                            <input
+                                type="text"
+                                id="lobby-name"
+                                name="name"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label for="max-players">Max Players:</label>
+                            <input
+                                type="number"
+                                id="max-players"
+                                name="maxPlayers"
+                                value="4"
+                                max="4"
+                            />
+                        </div>
+                        <button type="submit">Create Game</button>
+                    </form>
+                </div>
             </div>
         </div>
     </body>
