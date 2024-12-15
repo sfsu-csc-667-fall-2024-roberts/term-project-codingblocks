@@ -1,22 +1,57 @@
+import cookieParser from "cookie-parser";
+import dotenv from "dotenv";
 import express from "express";
-import * as routes from "./routes";
-import configuration from "./config";
+import httpErrors from "http-errors";
+import morgan from "morgan";
+import * as path from "path";
+import { createServer } from "http";
 
-import path from "path";
-const staticPath = path.join(process.cwd(), "src", "public");
+dotenv.config();
+
+import * as configuration from "./config";
+import * as routes from "./routes";
+import * as middleware from "./middleware";
+
+const app = express();
+const server = createServer(app);
 
 const PORT = process.env.PORT || 3000;
 
-const app = express();
-
-// Middleware and static setup
+// middleware
+app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+const staticPath = path.join(process.cwd(), "src", "public");
+app.use(express.static(staticPath));
+
 configuration.configureLiveReload(app, staticPath);
+configuration.configureSocketIO(
+    server,
+    app,
+    configuration.configureSession(app),
+);
 
-// Add new games route
-app.use("/games", routes.games);
+app.use(cookieParser());
+app.set("views", path.join(process.cwd(), "src", "server", "views"));
+app.set("view engine", "ejs");
 
-app.listen(PORT, () => {
+// api routes
+app.use("/", routes.home);
+app.use("/auth", routes.auth);
+app.use("/lobby", middleware.authentication, routes.lobby);
+app.use("/games", middleware.authentication, routes.games);
+
+app.use(
+    (
+        _req: express.Request,
+        _res: express.Response,
+        next: express.NextFunction,
+    ) => {
+        next(httpErrors(404));
+    },
+);
+
+server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
