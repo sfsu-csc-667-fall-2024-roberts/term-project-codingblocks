@@ -6,6 +6,10 @@ import {
     DRAW_CARD,
     UPDATE_GAME_STATE,
     ALL_PLAYER_DATA,
+    DEAL_CARDS,
+    PLAY_CARD,
+    SHUFFLE_DISCARD_PILE,
+    GET_GAME_DETAILS,
 } from "./sql";
 
 const createGame = async (): Promise<{ id: number }> => {
@@ -25,6 +29,10 @@ const get = async (gameId: number, playerId: number) => {
         players,
         playerHand,
     };
+};
+
+const getGameDetails = async (gameId: number) => {
+    return await db.one(GET_GAME_DETAILS, [gameId]);
 };
 
 const getPlayers = async (
@@ -68,12 +76,28 @@ const updateGameState = async (gameId: number, showing: boolean) => {
     return db.none(UPDATE_GAME_STATE, [showing, gameId]);
 };
 
+const dealCards = async (gameId: number) => {
+    return await db.none(DEAL_CARDS, [gameId]);
+};
+
+const playCard = async (gameId: number, cardId: number) => {
+    return await db.none(PLAY_CARD, [cardId, gameId]);
+};
+
+const shuffleDiscardPile = async (gameId: number) => {
+    return await db.none(SHUFFLE_DISCARD_PILE, [gameId]);
+};
+
 export default {
     createGame,
     get,
+    getGameDetails,
     getPlayers,
     joinGame,
     getPlayerHand,
     drawCard,
     updateGameState,
+    dealCards,
+    playCard,
+    shuffleDiscardPile,
 };
