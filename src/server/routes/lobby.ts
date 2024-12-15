@@ -31,12 +31,24 @@ router.post("/create", async (req: Request, res: Response) => {
     }
 });
 
-//returns lobby page after login.
-router.get("/", (_req: Request, res: Response) => {
-    res.render("games/lobby", {
-        message: "Games lobby after the login.",
-        userLoggedIn: true,
-    });
+router.get("/", async (req: Request, res: Response) => {
+    try {
+        // @ts-expect-error
+        const { user } = req.session;
+
+        // TODO: show list of available games
+        // const activeGames = await Games.getActiveGames();
+
+        res.render("games/lobby", {
+            title: "Game Lobby",
+            user: user,
+            userLoggedIn: true,
+            // activeGames: activeGames
+        });
+    } catch (err) {
+        console.error("Error loading lobby:", err);
+        res.redirect("/");
+    }
 });
 
 export default router;
