@@ -1,5 +1,5 @@
 import express from "express";
-import * as db from "../db/games";
+import { Games } from "../db";
 
 const router = express.Router();
 
@@ -8,7 +8,7 @@ router.get("/:gameId", async (req, res) => {
     const { gameId } = req.params;
 
     try {
-        const gameData = await db.getGameDetails(Number(gameId));
+        const gameData = await Games.getGameDetails(Number(gameId));
         res.render("games/game", {
             title: `Game ${gameId}`,
             gameId,
@@ -27,7 +27,7 @@ router.post("/api/games/:id/deal", async (req, res) => {
     const { id: gameId } = req.params;
 
     try {
-        await db.dealCards(Number(gameId));
+        await Games.dealCards(Number(gameId));
         res.status(200).json({ message: "Cards dealt successfully" });
     } catch (error) {
         console.error(error);
@@ -41,7 +41,7 @@ router.post("/api/games/:id/play", async (req, res) => {
     const { cardId } = req.body;
 
     try {
-        await db.playCard(Number(gameId), Number(cardId));
+        await Games.playCard(Number(gameId), Number(cardId));
         res.status(200).json({ message: "Card played successfully" });
     } catch (error) {
         console.error(error);
@@ -54,7 +54,11 @@ router.get("/api/games/:id/hand", async (req, res) => {
     const { id: gameId } = req.params;
 
     try {
-        const hand = await db.getPlayerHand(Number(gameId), req.session.user.id);
+        const hand = await Games.getPlayerHand(
+            Number(gameId),
+            // @ts-expect-error
+            req.session.user.id,
+        );
         res.status(200).json(hand);
     } catch (error) {
         console.error(error);
