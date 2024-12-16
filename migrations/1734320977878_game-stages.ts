@@ -4,11 +4,12 @@ export const shorthands: ColumnDefinitions | undefined = undefined;
 
 export async function up(pgm: MigrationBuilder): Promise<void> {
     pgm.createType("game_stage", [
-        "dealing",
         "waiting",
-        "flop",
+        "preflop", // before turn 3 cards
+        "flop", // after
         "turn",
         "river",
+        "showdown",
     ]);
 
     pgm.addColumn("games", {
