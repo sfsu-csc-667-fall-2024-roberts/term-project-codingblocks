@@ -15,6 +15,6 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
 }
 
 export async function down(pgm: MigrationBuilder): Promise<void> {
-    pgm.dropColumn("game_users", "user_status");
+    pgm.dropColumn("game_users", "status");
     pgm.dropType("user_status");
 }
