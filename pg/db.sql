@@ -2,48 +2,76 @@
 DROP TRIGGER IF EXISTS update_users_updated_at ON users;
 drop function if exists update_updated_at_column()
 ;
-
 DROP TABLE IF EXISTS user_hands;
 DROP TABLE IF EXISTS game_users;
 DROP TABLE IF EXISTS hand_rankings;
 DROP TABLE IF EXISTS cards;
 DROP TABLE IF EXISTS games;
 DROP TABLE IF EXISTS users;
-
 DROP SEQUENCE IF EXISTS hand_rankings_id_seq;
 DROP SEQUENCE IF EXISTS users_id_seq;
 DROP SEQUENCE IF EXISTS cards_id_seq;
 DROP SEQUENCE IF EXISTS games_id_seq;
-
 DROP TYPE IF EXISTS hands;
 DROP TYPE IF EXISTS suits;
+DROP TYPE IF EXISTS stage;
+DROP TYPE IF EXISTS status;
 
 CREATE TYPE suits AS ENUM ('hearts', 'diamonds', 'clubs', 'spades');
 CREATE TYPE hands AS ENUM ('high_card', 'pair', 'two_pair', 'three_of_kind', 'straight', 'flush', 'full_house', 'four_of_kind', 'straight_flush', 'royal_flush');
+CREATE TYPE stage AS ENUM ('waiting', 'preflop', 'flop', 'turn', 'river', 'showdown');
+CREATE TYPE status AS ENUM ('active', 'allin', 'folded');
 
 CREATE SEQUENCE IF NOT EXISTS hand_rankings_id_seq;
+CREATE SEQUENCE IF NOT EXISTS users_id_seq;
+CREATE SEQUENCE IF NOT EXISTS cards_id_seq;
+CREATE SEQUENCE IF NOT EXISTS games_id_seq;
+
 CREATE TABLE IF NOT EXISTS hand_rankings (
     id bigint NOT NULL PRIMARY KEY DEFAULT nextval('hand_rankings_id_seq'),
     rank integer NOT NULL,
     name hands NOT NULL
 );
 
-CREATE SEQUENCE IF NOT EXISTS users_id_seq;
 CREATE TABLE IF NOT EXISTS users (
     id bigint NOT NULL PRIMARY KEY DEFAULT nextval('users_id_seq'),
     username varchar(100) NOT NULL,
     email varchar(255) NOT NULL UNIQUE,
     password varchar(255) NOT NULL,
+    gravatar varchar(100),
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE SEQUENCE IF NOT EXISTS cards_id_seq;
 CREATE TABLE IF NOT EXISTS cards (
     id bigint NOT NULL PRIMARY KEY DEFAULT nextval('cards_id_seq'),
     face_value integer NOT NULL,
     value varchar(2) NOT NULL,
     suit suits NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS games (
+    id bigint NOT NULL PRIMARY KEY DEFAULT nextval('games_id_seq'),
+    pot integer NOT NULL,
+    showing boolean NOT NULL DEFAULT false,
+    current_stage stage NOT NULL DEFAULT 'waiting',
+    minimum_bet integer NOT NULL DEFAULT 0,
+    current_bet integer NOT NULL DEFAULT 0,
+    deck_position integer NOT NULL DEFAULT 0,
+    winner_id bigint,
+    created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS game_users (
+    game_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    is_current boolean NOT NULL DEFAULT false,
+    seat integer NOT NULL,
+    status status NOT NULL DEFAULT 'active',
+    chips integer NOT NULL DEFAULT 0,
+    current_bet integer NOT NULL DEFAULT 0,
+    PRIMARY KEY (game_id, user_id)
 );
 
 CREATE TABLE IF NOT EXISTS user_hands (
@@ -54,28 +82,34 @@ CREATE TABLE IF NOT EXISTS user_hands (
     PRIMARY KEY (user_id, card_id, game_id)
 );
 
-CREATE TABLE IF NOT EXISTS game_users (
-    game_id bigint NOT NULL,
-    user_id bigint NOT NULL,
-    is_current boolean NOT NULL DEFAULT false,
-    seat integer NOT NULL,
-    PRIMARY KEY (game_id, user_id)
-);
-
-CREATE SEQUENCE IF NOT EXISTS games_id_seq;
-CREATE TABLE IF NOT EXISTS games (
-    id bigint NOT NULL PRIMARY KEY DEFAULT nextval('games_id_seq'),
-    pot integer NOT NULL,
-    showing boolean NOT NULL DEFAULT false
-);
-
 ALTER TABLE game_users ADD CONSTRAINT game_users_game_id_fk FOREIGN KEY (game_id) REFERENCES games (id);
 ALTER TABLE game_users ADD CONSTRAINT game_users_user_id_fk FOREIGN KEY (user_id) REFERENCES users (id);
 ALTER TABLE user_hands ADD CONSTRAINT user_hands_user_id_fk FOREIGN KEY (user_id) REFERENCES users (id);
 ALTER TABLE user_hands ADD CONSTRAINT user_hands_game_id_fk FOREIGN KEY (game_id) REFERENCES games (id);
 ALTER TABLE user_hands ADD CONSTRAINT user_hands_card_id_fk FOREIGN KEY (card_id) REFERENCES cards (id);
+ALTER TABLE games ADD CONSTRAINT games_winner_id_fk FOREIGN KEY (winner_id) REFERENCES users (id);
 
 CREATE INDEX idx_game_users_user_id ON game_users(user_id);
 CREATE INDEX idx_user_hands_game_id ON user_hands(game_id);
 CREATE INDEX idx_user_hands_card_id ON user_hands(card_id);
+ALTER TABLE game_users ADD CONSTRAINT unique_game_seat UNIQUE (game_id, seat);
+
+INSERT INTO cards (face_value, value, suit) 
+SELECT 
+    CASE 
+        WHEN value = 'A' THEN 14
+        WHEN value = 'K' THEN 13
+        WHEN value = 'Q' THEN 12
+        WHEN value = 'J' THEN 11
+        ELSE value::integer
+    END as face_value,
+    value,
+    suit::suits
+FROM (
+    SELECT value, suit FROM (
+        SELECT unnest(ARRAY['2','3','4','5','6','7','8','9','10','J','Q','K','A']) as value
+    ) v CROSS JOIN (
+        SELECT unnest(ARRAY['hearts', 'diamonds', 'clubs', 'spades']) as suit
+    ) s
+) cards;
 
