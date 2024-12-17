@@ -1,6 +1,10 @@
 import express from "express";
 import { Games } from "../db";
-import { broadcastGameUpdate, isPlayerInGame } from "./game-middleware/";
+import {
+    broadcastGameUpdate,
+    isPlayerInGame,
+    isPlayersTurn,
+} from "./game-middleware/";
 
 const router = express.Router();
 
@@ -103,6 +107,7 @@ router.post(
 router.post(
     "/:gameId/action",
     isPlayerInGame,
+    isPlayersTurn,
     async (req, _res, next) => {
         const { gameId } = req.params;
         // @ts-expect-error

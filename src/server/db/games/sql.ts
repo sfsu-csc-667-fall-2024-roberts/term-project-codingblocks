@@ -110,19 +110,19 @@ export const UPDATE_PLAYER_ACTION = `
 `;
 
 export const NEXT_PLAYER = `
-  UPDATE game_users
-  SET is_current = 
-    CASE WHEN seat = 
-      (SELECT seat FROM game_users 
-       WHERE game_id = $1 AND is_current = true)
-    THEN false
-    WHEN seat = 
-      (SELECT LEAST(MAX(seat), 
-        (SELECT seat FROM game_users 
-         WHERE game_id = $1 AND is_current = true) + 1)
-       FROM game_users 
-       WHERE game_id = $1)
-    THEN true
-    ELSE false END
-  WHERE game_id = $1;
+  UPDATE games
+  SET current_seat = 
+    CASE 
+      WHEN current_seat = (SELECT MAX(seat) FROM game_users WHERE game_id = $1)
+      THEN (SELECT MIN(seat) FROM game_users WHERE game_id = $1)
+      ELSE (SELECT MIN(seat) FROM game_users WHERE game_id = $1 AND seat > current_seat)
+    END
+  WHERE id = $1;
 `;
+
+export const IS_CURRENT = `
+  SELECT games.current_seat = game_users.seat AS is_current_player
+    FROM games, game_users
+    WHERE games.id = $1
+    AND game_users.user_id = $2
+    AND game_users.game_id = games.id`;

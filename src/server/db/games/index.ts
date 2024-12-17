@@ -9,6 +9,7 @@ import {
     GET_GAME_DETAILS,
     UPDATE_PLAYER_ACTION,
     NEXT_PLAYER,
+    IS_CURRENT,
 } from "./sql";
 
 const createGame = async (): Promise<{ id: number }> => {
@@ -77,6 +78,13 @@ const playerAction = async (
     return db.none(UPDATE_PLAYER_ACTION, [action, betAmount, gameId, userId]);
 };
 
+const isCurrentPlayer = async (
+    gameId: number,
+    userId: number,
+): Promise<{ is_current_player: boolean }> => {
+    return await db.one(IS_CURRENT, [gameId, userId]);
+};
+
 const nextPlayer = async (gameId: number) => {
     return db.none(NEXT_PLAYER, [gameId]);
 };
@@ -91,5 +99,6 @@ export default {
     updateGameState,
     dealCards,
     playerAction,
+    isCurrentPlayer,
     nextPlayer,
 };
