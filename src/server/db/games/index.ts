@@ -10,21 +10,38 @@ import {
     UPDATE_PLAYER_ACTION,
     NEXT_PLAYER,
     IS_CURRENT,
+    CHECK_ROUND_COMPLETE,
+    GET_COMMUNITY_CARDS,
+    DEAL_COMMUNITY_CARDS,
+    GET_HIGHEST_BET,
+    GET_CURRENT_POT,
+    UPDATE_POT,
 } from "./sql";
+
+type GameStage = "waiting" | "preflop" | "flop" | "turn" | "river" | "showdown";
 
 const createGame = async (): Promise<{ id: number }> => {
     return await db.one(CREATE_GAME);
+};
+
+const getCommunityCards = async (gameId: number, stage: GameStage) => {
+    return db.any(GET_COMMUNITY_CARDS, [gameId, stage]);
 };
 
 const get = async (gameId: number, playerId: number) => {
     const gameDetails = await getGameDetails(gameId);
     const players = await getPlayers(gameId);
     const playerHand = await db.any(GET_PLAYER_HAND, [gameId, playerId]);
+    const communityCards = await getCommunityCards(
+        gameId,
+        gameDetails.current_stage,
+    );
 
     return {
         gameDetails,
         players,
         playerHand,
+        communityCards,
     };
 };
 
@@ -75,7 +92,63 @@ const playerAction = async (
     action: "active" | "folded" | "allin",
     betAmount: number = 0,
 ) => {
-    return db.none(UPDATE_PLAYER_ACTION, [action, betAmount, gameId, userId]);
+    return db.tx(async (t) => {
+        const highestBet = await t.one(GET_HIGHEST_BET, [gameId]);
+        const currentPlayer = await t.one(
+            "SELECT chips, current_bet FROM game_users WHERE game_id = $1 AND user_id = $2",
+            [gameId, userId],
+        );
+
+        let finalBetAmount = betAmount;
+
+        switch (action) {
+            case "active":
+                if (betAmount === 0) {
+                    if (highestBet.highest_bet > currentPlayer.current_bet) {
+                        throw new Error(
+                            "Cannot check when there are outstanding bets",
+                        );
+                    }
+                } else {
+                    const minimumCallAmount =
+                        highestBet.highest_bet - currentPlayer.current_bet;
+
+                    if (betAmount < minimumCallAmount) {
+                        if (betAmount === currentPlayer.chips) {
+                            action = "allin";
+                        } else {
+                            throw new Error(
+                                "Bet amount must be at least the minimum call amount",
+                            );
+                        }
+                    }
+                }
+                break;
+
+            case "allin":
+                finalBetAmount = currentPlayer.chips;
+                break;
+
+            case "folded":
+                finalBetAmount = 0;
+                break;
+        }
+
+        if (finalBetAmount > currentPlayer.chips) {
+            throw new Error("Not enough chips");
+        }
+
+        await t.none(UPDATE_PLAYER_ACTION, [
+            action,
+            finalBetAmount,
+            gameId,
+            userId,
+        ]);
+
+        if (finalBetAmount > 0) {
+            await t.none(UPDATE_POT, [finalBetAmount, gameId]);
+        }
+    });
 };
 
 const isCurrentPlayer = async (
@@ -86,7 +159,116 @@ const isCurrentPlayer = async (
 };
 
 const nextPlayer = async (gameId: number) => {
-    return db.none(NEXT_PLAYER, [gameId]);
+    return db.tx(async (t) => {
+        const { current_seat } = await t.one(
+            "SELECT current_seat FROM games WHERE id = $1",
+            [gameId],
+        );
+
+        const players = await t.any(
+            `
+            SELECT seat, status 
+            FROM game_users 
+            WHERE game_id = $1 
+            ORDER BY seat`,
+            [gameId],
+        );
+
+        let nextSeat = current_seat;
+        let foundActive = false;
+        let loopCount = 0;
+
+        while (!foundActive && loopCount < players.length) {
+            if (nextSeat >= players[players.length - 1].seat) {
+                nextSeat = players[0].seat;
+            } else {
+                nextSeat =
+                    players.find((p) => p.seat > nextSeat)?.seat ||
+                    players[0].seat;
+            }
+
+            const nextPlayer = players.find((p) => p.seat === nextSeat);
+            if (nextPlayer && nextPlayer.status === "active") {
+                foundActive = true;
+            }
+
+            loopCount++;
+        }
+
+        await t.none("UPDATE games SET current_seat = $1 WHERE id = $2", [
+            nextSeat,
+            gameId,
+        ]);
+    });
+};
+
+const isRoundComplete = async (gameId: number): Promise<boolean> => {
+    const { is_round_complete } = await db.one(CHECK_ROUND_COMPLETE, [gameId]);
+    return is_round_complete;
+};
+
+const dealCommunityCards = async (gameId: number, stage: GameStage) => {
+    return db.none(DEAL_COMMUNITY_CARDS, [gameId, stage]);
+};
+
+const getHighestBet = async (gameId: number) => {
+    return await db.one(GET_HIGHEST_BET, [gameId]);
+};
+
+const updatePot = async (gameId: number, amount: number) => {
+    return await db.none(UPDATE_POT, [amount, gameId]);
+};
+
+const getCurrentPot = async (gameId: number): Promise<number> => {
+    const result = await db.one(GET_CURRENT_POT, [gameId]);
+    return result.pot;
+};
+
+const checkWinner = async (gameId: number): Promise<boolean> => {
+    return db
+        .tx(async (t) => {
+            const result = await t.one(
+                `
+            SELECT CAST(COUNT(*) AS INTEGER) as active_count 
+            FROM game_users 
+            WHERE game_id = $1 
+            AND status = 'active'
+            `,
+                [gameId],
+            );
+
+            if (Number(result.active_count) === 1) {
+                const winner = await t.one(
+                    `
+                SELECT user_id 
+                FROM game_users 
+                WHERE game_id = $1 
+                AND status = 'active'
+                `,
+                    [gameId],
+                );
+
+                await t.one(
+                    `
+                UPDATE games 
+                SET 
+                    current_stage = 'showdown',
+                    winner_id = $1
+                WHERE id = $2
+                RETURNING id, current_stage, winner_id
+                `,
+                    [winner.user_id, gameId],
+                );
+
+                return true;
+            }
+
+            return false;
+        })
+        .catch((error) => {
+            console.error("Error in checkWinner:", error);
+            return false;
+        });
 };
 
 export default {
@@ -101,4 +283,11 @@ export default {
     playerAction,
     isCurrentPlayer,
     nextPlayer,
+    isRoundComplete,
+    dealCommunityCards,
+    getCommunityCards,
+    getHighestBet,
+    updatePot,
+    getCurrentPot,
+    checkWinner,
 };

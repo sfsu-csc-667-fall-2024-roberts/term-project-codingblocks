@@ -16,7 +16,13 @@ router.get("/:gameId", isPlayerInGame, async (req, res) => {
 
     try {
         const gameState = await Games.get(Number(gameId), userId);
-        const { gameDetails, players, playerHand } = gameState;
+        const { gameDetails, players, playerHand, communityCards } = gameState;
+
+        if (gameDetails.current_stage === "showdown") {
+            res.redirect(`/games/${gameId}/winner`);
+            return;
+        }
+
         const canStart =
             players.length >= 1 && gameDetails.current_stage === "waiting";
 
@@ -27,6 +33,7 @@ router.get("/:gameId", isPlayerInGame, async (req, res) => {
             players,
             playerHand,
             canStart,
+            communityCards,
             userLoggedIn: true,
         });
     } catch (error) {
@@ -82,24 +89,22 @@ router.post("/:gameId/join", async (req, res) => {
 router.post(
     "/:gameId/start",
     isPlayerInGame,
-    async (req, res) => {
+    async (req, res, next) => {
         const { gameId } = req.params;
 
         try {
             await Games.dealCards(Number(gameId));
-            res.json({ success: true });
+            next();
         } catch (error) {
             console.error(error);
             res.status(500).json({ error: "Failed to start game" });
+            return;
         }
     },
     broadcastGameUpdate,
     async (req, res) => {
         const { gameId } = req.params;
-        // @ts-expect-error
-        const { id: userId } = req.session.user;
-        const gameState = await Games.get(Number(gameId), userId);
-        res.json(gameState);
+        res.redirect(`/games/${gameId}`);
     },
 );
 
@@ -132,14 +137,65 @@ router.post(
                 return;
             }
 
+            let betAmount = Number(amount) || 0;
+            if (action === "call") {
+                const highestBet = await Games.getHighestBet(Number(gameId));
+                const playerState = (
+                    await Games.getPlayers(Number(gameId))
+                ).find((p) => p.id === userId);
+
+                if (!playerState) {
+                    _res.status(400).json({ error: "Player not found" });
+                    return;
+                }
+
+                betAmount = highestBet.highest_bet - playerState.current_bet;
+            }
+
             await Games.playerAction(
                 Number(gameId),
                 userId,
                 dbAction,
-                Number(amount) || 0,
+                betAmount,
             );
 
             await Games.nextPlayer(Number(gameId));
+
+            const hasWinner = await Games.checkWinner(Number(gameId));
+            if (hasWinner) {
+                _res.redirect(`/games/${gameId}/winner`);
+                return;
+            }
+
+            const roundComplete = await Games.isRoundComplete(Number(gameId));
+            if (roundComplete) {
+                const currentStage = (
+                    await Games.getGameDetails(Number(gameId))
+                ).current_stage;
+                const stageProgression: { [index: string]: any } = {
+                    preflop: "flop",
+                    flop: "turn",
+                    turn: "river",
+                    river: "showdown",
+                };
+
+                if (currentStage in stageProgression) {
+                    const nextStage = stageProgression[currentStage];
+                    await Games.updateGameState(Number(gameId), nextStage);
+
+                    if (nextStage === "showdown") {
+                        _res.redirect(`/games/${gameId}/winner`);
+                        return;
+                    }
+
+                    if (nextStage !== "showdown") {
+                        await Games.dealCommunityCards(
+                            Number(gameId),
+                            nextStage,
+                        );
+                    }
+                }
+            }
             next();
         } catch (error) {
             console.error(error);
@@ -152,5 +208,45 @@ router.post(
         res.redirect(`/games/${gameId}`);
     },
 );
+
+// should technically come redirect here if games is over
+router.get("/:gameId/winner", isPlayerInGame, async (req, res) => {
+    const { gameId } = req.params;
+    // @ts-expect-error
+    const { id: userId } = req.session.user;
+
+    try {
+        const gameState = await Games.get(Number(gameId), userId);
+        const { gameDetails, players, communityCards } = gameState;
+        console.log(gameDetails);
+
+        const winner = players.find((p) => p.id === gameDetails.winner_id);
+        if (!winner) {
+            throw new Error("Winner not found");
+        }
+
+        const winningHand = await Games.getPlayerHand(
+            Number(gameId),
+            winner.id,
+        );
+
+        res.render("games/winner", {
+            title: `Game ${gameId} Winner`,
+            gameId,
+            gameDetails,
+            winner,
+            winningHand,
+            players,
+            communityCards,
+            userLoggedIn: true,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).render("error", {
+            message: "Failed to load winner page",
+            error: { status: 500 },
+        });
+    }
+});
 
 export default router;

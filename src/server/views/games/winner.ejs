@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Game <%= gameId %> Winner</title>
+        <link rel="stylesheet" href="/stylesheets/style.css" />
+    </head>
+    <body>
+        <%- include('../partials/navbar.ejs') %>
+        <div class="outsideContainer">
+            <div class="container">
+                <h1>Game <%= gameId %> Complete!</h1>
+                
+                <div class="winner-section">
+                    <h2>Winner: <%= winner.username %></h2>
+                    <div class="winner-details">
+                        <p>Final Pot: $<%= gameDetails.pot %></p>
+                        <p>Winning Hand: 
+                            <% winningHand.forEach(card => { %>
+                                <span class="card"><%= card.value %> of <%= card.suit %></span>
+                            <% }); %>
+                        </p>
+                        <% if (communityCards && communityCards.length > 0) { %>
+                            <p>Community Cards:</p>
+                            <div class="community-cards">
+                                <% communityCards.forEach(card => { %>
+                                    <span class="card"><%= card.value %> of <%= card.suit %></span>
+                                <% }); %>
+                            </div>
+                        <% } %>
+                    </div>
+
+                    <div class="final-standings">
+                        <h3>Final Standings</h3>
+                        <% players.forEach(player => { %>
+                            <div class="player <%= player.id === winner.id ? 'winner' : '' %>">
+                                <p><%= player.username %></p>
+                                <p>Final Chips: $<%= player.chips %></p>
+                                <p>Status: <%= player.status %></p>
+                            </div>
+                        <% }); %>
+                    </div>
+
+                    <div class="action-buttons">
+                        <a href="/lobby" class="button">Back to Lobby</a>
+                        <form action="/games/<%= gameId %>/rematch" method="POST" style="display: inline;">
+                            <button type="submit">Start Rematch</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
