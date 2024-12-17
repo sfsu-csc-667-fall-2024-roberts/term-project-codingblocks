@@ -159,7 +159,47 @@ const isCurrentPlayer = async (
 };
 
 const nextPlayer = async (gameId: number) => {
-    return db.none(NEXT_PLAYER, [gameId]);
+    return db.tx(async (t) => {
+        const { current_seat } = await t.one(
+            "SELECT current_seat FROM games WHERE id = $1",
+            [gameId],
+        );
+
+        const players = await t.any(
+            `
+            SELECT seat, status 
+            FROM game_users 
+            WHERE game_id = $1 
+            ORDER BY seat`,
+            [gameId],
+        );
+
+        let nextSeat = current_seat;
+        let foundActive = false;
+        let loopCount = 0;
+
+        while (!foundActive && loopCount < players.length) {
+            if (nextSeat >= players[players.length - 1].seat) {
+                nextSeat = players[0].seat;
+            } else {
+                nextSeat =
+                    players.find((p) => p.seat > nextSeat)?.seat ||
+                    players[0].seat;
+            }
+
+            const nextPlayer = players.find((p) => p.seat === nextSeat);
+            if (nextPlayer && nextPlayer.status === "active") {
+                foundActive = true;
+            }
+
+            loopCount++;
+        }
+
+        await t.none("UPDATE games SET current_seat = $1 WHERE id = $2", [
+            nextSeat,
+            gameId,
+        ]);
+    });
 };
 
 const isRoundComplete = async (gameId: number): Promise<boolean> => {
