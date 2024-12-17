@@ -83,15 +83,16 @@ router.post("/:gameId/join", async (req, res) => {
 router.post(
     "/:gameId/start",
     isPlayerInGame,
-    async (req, res) => {
+    async (req, res, next) => {
         const { gameId } = req.params;
 
         try {
             await Games.dealCards(Number(gameId));
-            res.json({ success: true });
+            next();
         } catch (error) {
             console.error(error);
             res.status(500).json({ error: "Failed to start game" });
+            return;
         }
     },
     broadcastGameUpdate,
@@ -130,11 +131,26 @@ router.post(
                 return;
             }
 
+            let betAmount = Number(amount) || 0;
+            if (action === "call") {
+                const highestBet = await Games.getHighestBet(Number(gameId));
+                const playerState = (
+                    await Games.getPlayers(Number(gameId))
+                ).find((p) => p.id === userId);
+
+                if (!playerState) {
+                    _res.status(400).json({ error: "Player not found" });
+                    return;
+                }
+
+                betAmount = highestBet.highest_bet - playerState.current_bet;
+            }
+
             await Games.playerAction(
                 Number(gameId),
                 userId,
                 dbAction,
-                Number(amount) || 0,
+                betAmount,
             );
 
             await Games.nextPlayer(Number(gameId));
