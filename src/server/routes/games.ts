@@ -17,6 +17,12 @@ router.get("/:gameId", isPlayerInGame, async (req, res) => {
     try {
         const gameState = await Games.get(Number(gameId), userId);
         const { gameDetails, players, playerHand, communityCards } = gameState;
+
+        if (gameDetails.current_stage === "showdown") {
+            res.redirect(`/games/${gameId}/winner`);
+            return;
+        }
+
         const canStart =
             players.length >= 1 && gameDetails.current_stage === "waiting";
 
