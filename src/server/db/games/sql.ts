@@ -173,3 +173,21 @@ export const GET_COMMUNITY_CARDS = `
       WHEN 'river' THEN 3
     END;
 `;
+
+export const GET_HIGHEST_BET = `
+  SELECT COALESCE(MAX(current_bet), 0) as highest_bet
+  FROM game_users
+  WHERE game_id = $1 AND status != 'folded';
+`;
+
+export const UPDATE_POT = `
+  UPDATE games
+  SET pot = pot + $1
+  WHERE id = $2;
+`;
+
+export const GET_CURRENT_POT = `
+  SELECT pot
+  FROM games
+  WHERE id = $1;
+`;

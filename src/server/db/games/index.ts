@@ -13,6 +13,9 @@ import {
     CHECK_ROUND_COMPLETE,
     GET_COMMUNITY_CARDS,
     DEAL_COMMUNITY_CARDS,
+    GET_HIGHEST_BET,
+    GET_CURRENT_POT,
+    UPDATE_POT,
 } from "./sql";
 
 type GameStage = "waiting" | "preflop" | "flop" | "turn" | "river" | "showdown";
@@ -89,7 +92,63 @@ const playerAction = async (
     action: "active" | "folded" | "allin",
     betAmount: number = 0,
 ) => {
-    return db.none(UPDATE_PLAYER_ACTION, [action, betAmount, gameId, userId]);
+    return db.tx(async (t) => {
+        const highestBet = await t.one(GET_HIGHEST_BET, [gameId]);
+        const currentPlayer = await t.one(
+            "SELECT chips, current_bet FROM game_users WHERE game_id = $1 AND user_id = $2",
+            [gameId, userId],
+        );
+
+        let finalBetAmount = betAmount;
+
+        switch (action) {
+            case "active":
+                if (betAmount === 0) {
+                    if (highestBet.highest_bet > currentPlayer.current_bet) {
+                        throw new Error(
+                            "Cannot check when there are outstanding bets",
+                        );
+                    }
+                } else {
+                    const minimumCallAmount =
+                        highestBet.highest_bet - currentPlayer.current_bet;
+
+                    if (betAmount < minimumCallAmount) {
+                        if (betAmount === currentPlayer.chips) {
+                            action = "allin";
+                        } else {
+                            throw new Error(
+                                "Bet amount must be at least the minimum call amount",
+                            );
+                        }
+                    }
+                }
+                break;
+
+            case "allin":
+                finalBetAmount = currentPlayer.chips;
+                break;
+
+            case "folded":
+                finalBetAmount = 0;
+                break;
+        }
+
+        if (finalBetAmount > currentPlayer.chips) {
+            throw new Error("Not enough chips");
+        }
+
+        await t.none(UPDATE_PLAYER_ACTION, [
+            action,
+            finalBetAmount,
+            gameId,
+            userId,
+        ]);
+
+        if (finalBetAmount > 0) {
+            await t.none(UPDATE_POT, [finalBetAmount, gameId]);
+        }
+    });
 };
 
 const isCurrentPlayer = async (
@@ -112,6 +171,19 @@ const dealCommunityCards = async (gameId: number, stage: GameStage) => {
     return db.none(DEAL_COMMUNITY_CARDS, [gameId, stage]);
 };
 
+const getHighestBet = async (gameId: number) => {
+    return await db.one(GET_HIGHEST_BET, [gameId]);
+};
+
+const updatePot = async (gameId: number, amount: number) => {
+    return await db.none(UPDATE_POT, [amount, gameId]);
+};
+
+const getCurrentPot = async (gameId: number): Promise<number> => {
+    const result = await db.one(GET_CURRENT_POT, [gameId]);
+    return result.pot;
+};
+
 export default {
     createGame,
     get,
@@ -127,4 +199,7 @@ export default {
     isRoundComplete,
     dealCommunityCards,
     getCommunityCards,
+    getHighestBet,
+    updatePot,
+    getCurrentPot,
 };
