@@ -1,81 +1,156 @@
 import express from "express";
 import { Games } from "../db";
+import {
+    broadcastGameUpdate,
+    isPlayerInGame,
+    isPlayersTurn,
+} from "./game-middleware/";
 
 const router = express.Router();
 
 // Route to render the game view
-router.get("/:gameId", async (req, res) => {
+router.get("/:gameId", isPlayerInGame, async (req, res) => {
     const { gameId } = req.params;
+    // @ts-expect-error
+    const { id: userId } = req.session.user;
 
     try {
-        const gameData = await Games.getGameDetails(Number(gameId));
+        const gameState = await Games.get(Number(gameId), userId);
+        const { gameDetails, players, playerHand } = gameState;
+        const canStart =
+            players.length >= 1 && gameDetails.current_stage === "waiting";
 
-        if (!gameData) {
-            return res.status(404).render("error", {
-                message: "Game not found",
-                error: { status: 404 },
-            });
-        }
-
-        return res.render("games/game", {
+        res.render("games/game", {
             title: `Game ${gameId}`,
             gameId,
-            pot: gameData.pot,
-            currentTurn: gameData.currentTurn,
-            playerHand: gameData.playerHand,
+            gameDetails,
+            players,
+            playerHand,
+            canStart,
             userLoggedIn: true,
         });
     } catch (error) {
         console.error(error);
-        return res.status(500).render("error", {
+        res.status(500).render("error", {
             message: "Failed to load game",
             error: { status: 500 },
         });
     }
 });
 
-// Deal cards to players
-router.post("/api/games/:id/deal", async (req, res) => {
-    const { id: gameId } = req.params;
-
+// for getting a joinr equeest
+router.get("/:gameId/join", async (req, res) => {
+    const { gameId } = req.params;
     try {
-        await Games.dealCards(Number(gameId));
-        res.status(200).json({ message: "Cards dealt successfully" });
+        const gameDetails = await Games.getGameDetails(Number(gameId));
+
+        res.render("games/join", {
+            title: `Join Game ${gameId}`,
+            gameId,
+            gameDetails,
+            userLoggedIn: true,
+        });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Failed to deal cards" });
+        res.status(500).render("error", {
+            message: "Failed to load join page",
+            error: { status: 500 },
+        });
     }
 });
 
-// Play a card
-router.post("/api/games/:id/play", async (req, res) => {
-    const { id: gameId } = req.params;
-    const { cardId } = req.body;
+// joining
+router.post("/:gameId/join", async (req, res) => {
+    const { gameId } = req.params;
+    // @ts-expect-error
+    const { id: userId } = req.session.user;
 
     try {
-        await Games.playCard(Number(gameId), Number(cardId));
-        res.status(200).json({ message: "Card played successfully" });
+        const game = Number(gameId);
+        await Games.joinGame(game, userId);
+        res.redirect(`/games/${game}`);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Failed to play card" });
+        res.status(500).render("error", {
+            message: "Failed to join game",
+            error: { status: 500 },
+        });
     }
 });
 
-// Get player's hand
-router.get("/api/games/:id/hand", async (req, res) => {
-    const { id: gameId } = req.params;
+// starting
+router.post(
+    "/:gameId/start",
+    isPlayerInGame,
+    async (req, res) => {
+        const { gameId } = req.params;
 
-    try {
-        const hand = await Games.getPlayerHand(
-            Number(gameId),
-            // @ts-expect-error
-            req.session.user.id,
-        );
-        res.status(200).json(hand);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Failed to retrieve hand" });
-    }
-});
+        try {
+            await Games.dealCards(Number(gameId));
+            res.json({ success: true });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: "Failed to start game" });
+        }
+    },
+    broadcastGameUpdate,
+    async (req, res) => {
+        const { gameId } = req.params;
+        // @ts-expect-error
+        const { id: userId } = req.session.user;
+        const gameState = await Games.get(Number(gameId), userId);
+        res.json(gameState);
+    },
+);
+
+// actions bet, check, raise, call, allin, fold
+router.post(
+    "/:gameId/action",
+    isPlayerInGame,
+    isPlayersTurn,
+    async (req, _res, next) => {
+        const { gameId } = req.params;
+        // @ts-expect-error
+        const { id: userId } = req.session.user;
+        const { action, amount } = req.body;
+
+        // validate -> execuite -> nextplayer
+        try {
+            const actionMapping: { [index: string]: any } = {
+                fold: "folded",
+                check: "active",
+                call: "active",
+                bet: "active",
+                raise: "active",
+                allin: "allin",
+            };
+
+            const dbAction = actionMapping[action];
+            const validActions = ["active", "folded", "allin"];
+            if (!validActions.includes(dbAction)) {
+                _res.status(400).json({ error: "Invalid action" });
+                return;
+            }
+
+            await Games.playerAction(
+                Number(gameId),
+                userId,
+                dbAction,
+                Number(amount) || 0,
+            );
+
+            await Games.nextPlayer(Number(gameId));
+            next();
+        } catch (error) {
+            console.error(error);
+            _res.status(500).json({ error: "Failed to process action" });
+        }
+    },
+    broadcastGameUpdate,
+    async (req, res) => {
+        const { gameId } = req.params;
+        res.redirect(`/games/${gameId}`);
+    },
+);
 
 export default router;

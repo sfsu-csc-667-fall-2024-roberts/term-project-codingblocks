@@ -3,16 +3,13 @@ import {
     CREATE_GAME,
     ADD_PLAYER,
     GET_PLAYER_HAND,
-    DRAW_CARD,
     UPDATE_GAME_STATE,
     ALL_PLAYER_DATA,
     DEAL_CARDS,
-    PLAY_CARD,
-    SHUFFLE_DISCARD_PILE,
     GET_GAME_DETAILS,
+    UPDATE_PLAYER_ACTION,
+    NEXT_PLAYER,
     IS_CURRENT,
-    GET_LAST_DRAW_TURN,
-    UPDATE_PLAYER_DRAW_TURN,
 } from "./sql";
 
 const createGame = async (): Promise<{ id: number }> => {
@@ -20,15 +17,12 @@ const createGame = async (): Promise<{ id: number }> => {
 };
 
 const get = async (gameId: number, playerId: number) => {
-    const currentSeat = await db.one(
-        "SELECT current_seat FROM games WHERE id=$1",
-        gameId,
-    );
+    const gameDetails = await getGameDetails(gameId);
     const players = await getPlayers(gameId);
-    const playerHand = await db.any(GET_PLAYER_HAND, [playerId, gameId, 0, 8]);
+    const playerHand = await db.any(GET_PLAYER_HAND, [gameId, playerId]);
 
     return {
-        currentSeat,
+        gameDetails,
         players,
         playerHand,
     };
@@ -38,25 +32,18 @@ const getGameDetails = async (gameId: number) => {
     return await db.one(GET_GAME_DETAILS, [gameId]);
 };
 
-const getPlayers = async (
-    gameId: number,
-): Promise<
-    {
-        gravatar: string;
-        id: number;
-        is_current: boolean;
-        last_draw_turn: number;
-        pile_1: number[];
-        pile_2: number[];
-        pile_3: number[];
-        pile_4: number[];
-        play_pile_top: number;
-        play_pile_top_id: number;
-        play_pile_count: number;
-        seat: number;
-        username: string;
-    }[]
-> => {
+type Player = {
+    id: number;
+    username: string;
+    gravatar: string;
+    seat: number;
+    chips: number;
+    current_bet: number;
+    status: "active" | "folded" | "allin";
+    is_current: boolean;
+};
+
+const getPlayers = async (gameId: number): Promise<Player[]> => {
     return await db.any(ALL_PLAYER_DATA, [gameId]);
 };
 
@@ -71,28 +58,24 @@ const getPlayerHand = async (gameId: number, userId: number) => {
     return await db.any(GET_PLAYER_HAND, [gameId, userId]);
 };
 
-const drawCard = async (gameId: number, userId: number) => {
-    return await db.one(DRAW_CARD, [gameId, userId]);
-};
-
-const updateGameState = async (gameId: number, showing: boolean) => {
-    return db.none(UPDATE_GAME_STATE, [showing, gameId]);
-};
-
 const dealCards = async (gameId: number) => {
     return await db.none(DEAL_CARDS, [gameId]);
 };
 
-const playCard = async (gameId: number, cardId: number) => {
-    return await db.none(PLAY_CARD, [cardId, gameId]);
+const updateGameState = async (
+    gameId: number,
+    stage: "waiting" | "preflop" | "flop" | "turn" | "river" | "showdown",
+) => {
+    return db.none(UPDATE_GAME_STATE, [stage, gameId]);
 };
 
-const shuffleDiscardPile = async (gameId: number) => {
-    return await db.none(SHUFFLE_DISCARD_PILE, [gameId]);
-};
-
-const getTurn = async (gameId: number) => {
-    return db.one("SELECT turn FROM games WHERE id = $1", gameId);
+const playerAction = async (
+    gameId: number,
+    userId: number,
+    action: "active" | "folded" | "allin",
+    betAmount: number = 0,
+) => {
+    return db.none(UPDATE_PLAYER_ACTION, [action, betAmount, gameId, userId]);
 };
 
 const isCurrentPlayer = async (
@@ -102,31 +85,20 @@ const isCurrentPlayer = async (
     return await db.one(IS_CURRENT, [gameId, userId]);
 };
 
-const getLastDrawTurn = async (
-    gameId: number,
-    userId: number,
-): Promise<{ last_draw_turn: number }> => {
-    return await db.one(GET_LAST_DRAW_TURN, [gameId, userId]);
-};
-
-const updatePlayerDrawTurn = async (gameId: number, userId: number) => {
-    return db.none(UPDATE_PLAYER_DRAW_TURN, [gameId, userId]);
+const nextPlayer = async (gameId: number) => {
+    return db.none(NEXT_PLAYER, [gameId]);
 };
 
 export default {
     createGame,
     get,
     getGameDetails,
-    getTurn,
     getPlayers,
     joinGame,
     getPlayerHand,
-    drawCard,
     updateGameState,
     dealCards,
-    playCard,
-    shuffleDiscardPile,
+    playerAction,
     isCurrentPlayer,
-    getLastDrawTurn,
-    updatePlayerDrawTurn,
+    nextPlayer,
 };

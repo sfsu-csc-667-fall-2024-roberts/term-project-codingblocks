@@ -7,11 +7,15 @@ const mode =
 const config: webpack.Configuration = {
     entry: {
         main: path.join(process.cwd(), "src", "client", "main.ts"),
+        games: path.join(process.cwd(), "src", "client", "games.ts"),
     },
     mode,
     output: {
         path: path.join(process.cwd(), "src", "public", "js"),
         filename: "[name].js",
+    },
+    resolve: {
+        extensions: [".ts", ".js"],
     },
     module: {
         rules: [
