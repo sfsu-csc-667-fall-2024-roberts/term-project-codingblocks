@@ -16,7 +16,7 @@ router.get("/:gameId", isPlayerInGame, async (req, res) => {
 
     try {
         const gameState = await Games.get(Number(gameId), userId);
-        const { gameDetails, players, playerHand } = gameState;
+        const { gameDetails, players, playerHand, communityCards } = gameState;
         const canStart =
             players.length >= 1 && gameDetails.current_stage === "waiting";
 
@@ -27,6 +27,7 @@ router.get("/:gameId", isPlayerInGame, async (req, res) => {
             players,
             playerHand,
             canStart,
+            communityCards,
             userLoggedIn: true,
         });
     } catch (error) {
@@ -96,10 +97,7 @@ router.post(
     broadcastGameUpdate,
     async (req, res) => {
         const { gameId } = req.params;
-        // @ts-expect-error
-        const { id: userId } = req.session.user;
-        const gameState = await Games.get(Number(gameId), userId);
-        res.json(gameState);
+        res.redirect(`/games/${gameId}`);
     },
 );
 
@@ -140,6 +138,31 @@ router.post(
             );
 
             await Games.nextPlayer(Number(gameId));
+
+            const roundComplete = await Games.isRoundComplete(Number(gameId));
+            if (roundComplete) {
+                const currentStage = (
+                    await Games.getGameDetails(Number(gameId))
+                ).current_stage;
+                const stageProgression: { [index: string]: any } = {
+                    preflop: "flop",
+                    flop: "turn",
+                    turn: "river",
+                    river: "showdown",
+                };
+
+                if (currentStage in stageProgression) {
+                    const nextStage = stageProgression[currentStage];
+                    await Games.updateGameState(Number(gameId), nextStage);
+
+                    if (nextStage !== "showdown") {
+                        await Games.dealCommunityCards(
+                            Number(gameId),
+                            nextStage,
+                        );
+                    }
+                }
+            }
             next();
         } catch (error) {
             console.error(error);

@@ -11,78 +11,93 @@
     <%- include('../partials/navbar.ejs') %>
         <div class="outsideContainer">
         <div class="container">
-            <h1>Poker Game <%= gameId %></h1>
-            
-            <div class="game-info">
-                <h2>Game Status</h2>
-                <p>Current Stage: <%= gameDetails.current_stage %></p>
-                <p>Pot: $<%= gameDetails.pot %></p>
-                <% if (gameDetails.current_stage === 'waiting' && canStart) { %>
+                <h1>Poker Game <%= gameId %></h1>
+
+                <div class="game-info">
+                    <h2>Game Status</h2>
+                    <p>Current Stage: <%= gameDetails.current_stage %></p>
+                    <p>Pot: $<%= gameDetails.pot %></p>
+                    <% if (gameDetails.current_stage === 'waiting' && canStart) { %>
                     <form action="/games/<%= gameId %>/start" method="POST">
                         <button type="submit">Start Game</button>
                     </form>
-                <% } %>
-            </div>
+                    <% } %>
+                </div>
 
-            <div class="players-section">
-                <h2>Players</h2>
-                <div class="players-list">
-                    <% players.forEach(player => { %>
+                <div class="community-cards">
+                    <h2>Community Cards</h2>
+                    <% if (communityCards && communityCards.length > 0) { %>
+                    <div class="cards">
+                        <% communityCards.forEach(card => { %>
+                        <div class="card">
+                            <%= card.value %> of <%= card.suit %>
+                        </div>
+                        <% }); %>
+                    </div>
+                    <% } else { %>
+                    <p>No community cards yet</p>
+                    <% } %>
+                </div>
+
+                <div class="players-section">
+                    <h2>Players</h2>
+                    <div class="players-list">
+                        <% players.forEach(player => { %>
                         <div class="player <%= player.is_current ? 'current-turn' : '' %>">
                             <p>Player: <%= player.username %></p>
                             <p>Chips: $<%= player.chips %></p>
                             <p>Status: <%= player.status %></p>
                             <% if (player.current_bet > 0) { %>
-                                <p>Current Bet: $<%= player.current_bet %></p>
+                            <p>Current Bet: $<%= player.current_bet %></p>
                             <% } %>
                         </div>
-                    <% }); %>
-                </div>
-            </div>
-
-            <div class="player-hand">
-                <h2>Your Hand</h2>
-                <% if (playerHand && playerHand.length > 0) { %>
-                    <div class="cards">
-                        <% playerHand.forEach(card => { %>
-                            <div class="card">
-                                <%= card.value %> of <%= card.suit %>
-                            </div>
                         <% }); %>
                     </div>
-                <% } else { %>
-                    <p>Waiting for cards to be dealt...</p>
-                <% } %>
-            </div>
+                </div>
 
-<% if (gameDetails.current_stage !== 'waiting' && gameDetails.current_stage !== 'showdown') { %>
-    <div class="player-actions">
-        <h2>Actions</h2>
-        <form action="/games/<%= gameId %>/action" method="POST" class="action-form">
-            <div class="action-buttons">
-                <button type="submit" name="action" value="fold">Fold</button>
-                
-                <% if (gameDetails.current_bet === 0) { %>
-                    <button type="submit" name="action" value="check">Check</button>
-                <% } else { %>
-                    <button type="submit" name="action" value="call">Call</button>
-                <% } %>
-                
-                <div class="bet-action">
-                    <input type="number" name="amount" placeholder="Bet amount" min="1">
-                    <% if (gameDetails.current_bet === 0) { %>
-                        <button type="submit" name="action" value="bet">Bet</button>
+                <div class="player-hand">
+                    <h2>Your Hand</h2>
+                    <% if (playerHand && playerHand.length > 0) { %>
+                    <div class="cards">
+                        <% playerHand.forEach(card => { %>
+                        <div class="card">
+                            <%= card.value %> of <%= card.suit %>
+                        </div>
+                        <% }); %>
+                    </div>
                     <% } else { %>
-                        <button type="submit" name="action" value="raise">Raise</button>
+                    <p>Waiting for cards to be dealt...</p>
                     <% } %>
                 </div>
-                
-                <button type="submit" name="action" value="allin">All In</button>
-            </div>
-        </form>
-    </div>
-<% } %>
 
-    </div>
-</body>
+                <% if (gameDetails.current_stage !== 'waiting' && gameDetails.current_stage !== 'showdown') { %>
+                <div class="player-actions">
+                    <h2>Actions</h2>
+                    <form action="/games/<%= gameId %>/action" method="POST" class="action-form">
+                        <div class="action-buttons">
+                            <button type="submit" name="action" value="fold">Fold</button>
+
+                            <% if (gameDetails.current_bet === 0) { %>
+                            <button type="submit" name="action" value="check">Check</button>
+                            <% } else { %>
+                            <button type="submit" name="action" value="call">Call</button>
+                            <% } %>
+
+                            <div class="bet-action">
+                                <input type="number" name="amount" placeholder="Bet amount" min="1">
+                                <% if (gameDetails.current_bet === 0) { %>
+                                <button type="submit" name="action" value="bet">Bet</button>
+                                <% } else { %>
+                                <button type="submit" name="action" value="raise">Raise</button>
+                                <% } %>
+                            </div>
+
+                            <button type="submit" name="action" value="allin">All In</button>
+                        </div>
+                    </form>
+                </div>
+                <% } %>
+
+            </div>
+    </body>
 </html>
