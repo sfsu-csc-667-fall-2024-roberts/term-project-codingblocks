@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Join Game <%= gameId %></title>
+        <link rel="stylesheet" href="/stylesheets/style.css" />
+    </head>
+    <body>
+        <%- include('../partials/navbar.ejs') %>
+        <div class="outsideContainer">
+        <div class="container">
+            <h1>Join Game <%= gameId %></h1>
+            
+            <div class="join-section">
+                <h2>Game Details</h2>
+                <p>Current Stage: <%= gameDetails.current_stage %></p>
+                <p>Current Players: <%= gameDetails.player_count %></p>
+
+                <form action="/games/<%= gameId %>/join" method="POST">
+                    <button type="submit" class="join-button">Join Game</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
