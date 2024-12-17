@@ -224,6 +224,53 @@ const getCurrentPot = async (gameId: number): Promise<number> => {
     return result.pot;
 };
 
+const checkWinner = async (gameId: number): Promise<boolean> => {
+    return db
+        .tx(async (t) => {
+            const result = await t.one(
+                `
+            SELECT CAST(COUNT(*) AS INTEGER) as active_count 
+            FROM game_users 
+            WHERE game_id = $1 
+            AND status = 'active'
+            `,
+                [gameId],
+            );
+
+            if (Number(result.active_count) === 1) {
+                const winner = await t.one(
+                    `
+                SELECT user_id 
+                FROM game_users 
+                WHERE game_id = $1 
+                AND status = 'active'
+                `,
+                    [gameId],
+                );
+
+                await t.one(
+                    `
+                UPDATE games 
+                SET 
+                    current_stage = 'showdown',
+                    winner_id = $1
+                WHERE id = $2
+                RETURNING id, current_stage, winner_id
+                `,
+                    [winner.user_id, gameId],
+                );
+
+                return true;
+            }
+
+            return false;
+        })
+        .catch((error) => {
+            console.error("Error in checkWinner:", error);
+            return false;
+        });
+};
+
 export default {
     createGame,
     get,
@@ -242,4 +289,5 @@ export default {
     getHighestBet,
     updatePot,
     getCurrentPot,
+    checkWinner,
 };

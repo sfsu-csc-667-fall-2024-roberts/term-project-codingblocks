@@ -155,6 +155,12 @@ router.post(
 
             await Games.nextPlayer(Number(gameId));
 
+            const hasWinner = await Games.checkWinner(Number(gameId));
+            if (hasWinner) {
+                _res.redirect(`/games/${gameId}/winner`);
+                return;
+            }
+
             const roundComplete = await Games.isRoundComplete(Number(gameId));
             if (roundComplete) {
                 const currentStage = (
@@ -170,6 +176,11 @@ router.post(
                 if (currentStage in stageProgression) {
                     const nextStage = stageProgression[currentStage];
                     await Games.updateGameState(Number(gameId), nextStage);
+
+                    if (nextStage === "showdown") {
+                        _res.redirect(`/games/${gameId}/winner`);
+                        return;
+                    }
 
                     if (nextStage !== "showdown") {
                         await Games.dealCommunityCards(
@@ -191,5 +202,45 @@ router.post(
         res.redirect(`/games/${gameId}`);
     },
 );
+
+// should technically come redirect here if games is over
+router.get("/:gameId/winner", isPlayerInGame, async (req, res) => {
+    const { gameId } = req.params;
+    // @ts-expect-error
+    const { id: userId } = req.session.user;
+
+    try {
+        const gameState = await Games.get(Number(gameId), userId);
+        const { gameDetails, players, communityCards } = gameState;
+        console.log(gameDetails);
+
+        const winner = players.find((p) => p.id === gameDetails.winner_id);
+        if (!winner) {
+            throw new Error("Winner not found");
+        }
+
+        const winningHand = await Games.getPlayerHand(
+            Number(gameId),
+            winner.id,
+        );
+
+        res.render("games/winner", {
+            title: `Game ${gameId} Winner`,
+            gameId,
+            gameDetails,
+            winner,
+            winningHand,
+            players,
+            communityCards,
+            userLoggedIn: true,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).render("error", {
+            message: "Failed to load winner page",
+            error: { status: 500 },
+        });
+    }
+});
 
 export default router;
