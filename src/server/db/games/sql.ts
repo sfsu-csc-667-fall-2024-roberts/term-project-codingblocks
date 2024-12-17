@@ -15,7 +15,8 @@ export const ADD_PLAYER = `
 `;
 
 export const GET_PLAYER_HAND = `
-  SELECT cards.* FROM user_hands
+  SELECT cards.*, user_hands.card_order
+  FROM user_hands
   JOIN cards ON user_hands.card_id = cards.id
   WHERE user_hands.game_id = $1 
   AND user_hands.user_id = $2
@@ -45,27 +46,44 @@ export const ALL_PLAYER_DATA = `
 `;
 
 export const DEAL_CARDS = `
-  -- First, clear any existing cards
   DELETE FROM user_hands WHERE game_id = $1;
   
-  -- Deal 2 cards to each player
-  INSERT INTO user_hands (user_id, card_id, game_id, card_order)
-  SELECT 
-    gu.user_id,
-    c.id,
-    $1 as game_id,
-    ROW_NUMBER() OVER (PARTITION BY gu.user_id ORDER BY RANDOM())
-  FROM game_users gu
-  CROSS JOIN (
-    SELECT id FROM cards 
+  WITH numbered_players AS (
+    SELECT 
+      user_id,
+      ROW_NUMBER() OVER (ORDER BY seat) * 2 - 1 as first_card,
+      ROW_NUMBER() OVER (ORDER BY seat) * 2 as second_card
+    FROM game_users
+    WHERE game_id = $1
+  ),
+  available_cards AS (
+    SELECT 
+      id,
+      ROW_NUMBER() OVER (ORDER BY RANDOM()) as card_number
+    FROM cards 
     WHERE id NOT IN (SELECT card_id FROM user_hands WHERE game_id = $1)
     ORDER BY RANDOM()
     LIMIT (SELECT COUNT(*) * 2 FROM game_users WHERE game_id = $1)
-  ) c
-  WHERE gu.game_id = $1;
+  )
+  INSERT INTO user_hands (user_id, card_id, game_id, card_order)
+  SELECT 
+    p.user_id,
+    c.id,
+    $1 as game_id,
+    CASE 
+      WHEN c.card_number = p.first_card THEN 1
+      WHEN c.card_number = p.second_card THEN 2
+    END as card_order
+  FROM numbered_players p
+  JOIN available_cards c ON 
+    c.card_number = p.first_card OR 
+    c.card_number = p.second_card;
   
-  -- Update game stage
   UPDATE games SET current_stage = 'preflop' WHERE id = $1;
+  
+  UPDATE game_users
+  SET is_current = (seat = 1)
+  WHERE game_id = $1;
 `;
 
 export const GET_GAME_DETAILS = `
