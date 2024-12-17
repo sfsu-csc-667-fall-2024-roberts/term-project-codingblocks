@@ -10,21 +10,35 @@ import {
     UPDATE_PLAYER_ACTION,
     NEXT_PLAYER,
     IS_CURRENT,
+    CHECK_ROUND_COMPLETE,
+    GET_COMMUNITY_CARDS,
+    DEAL_COMMUNITY_CARDS,
 } from "./sql";
+
+type GameStage = "waiting" | "preflop" | "flop" | "turn" | "river" | "showdown";
 
 const createGame = async (): Promise<{ id: number }> => {
     return await db.one(CREATE_GAME);
+};
+
+const getCommunityCards = async (gameId: number, stage: GameStage) => {
+    return db.any(GET_COMMUNITY_CARDS, [gameId, stage]);
 };
 
 const get = async (gameId: number, playerId: number) => {
     const gameDetails = await getGameDetails(gameId);
     const players = await getPlayers(gameId);
     const playerHand = await db.any(GET_PLAYER_HAND, [gameId, playerId]);
+    const communityCards = await getCommunityCards(
+        gameId,
+        gameDetails.current_stage,
+    );
 
     return {
         gameDetails,
         players,
         playerHand,
+        communityCards,
     };
 };
 
@@ -89,6 +103,15 @@ const nextPlayer = async (gameId: number) => {
     return db.none(NEXT_PLAYER, [gameId]);
 };
 
+const isRoundComplete = async (gameId: number): Promise<boolean> => {
+    const { is_round_complete } = await db.one(CHECK_ROUND_COMPLETE, [gameId]);
+    return is_round_complete;
+};
+
+const dealCommunityCards = async (gameId: number, stage: GameStage) => {
+    return db.none(DEAL_COMMUNITY_CARDS, [gameId, stage]);
+};
+
 export default {
     createGame,
     get,
@@ -101,4 +124,7 @@ export default {
     playerAction,
     isCurrentPlayer,
     nextPlayer,
+    isRoundComplete,
+    dealCommunityCards,
+    getCommunityCards,
 };

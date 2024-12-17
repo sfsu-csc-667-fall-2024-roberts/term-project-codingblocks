@@ -126,3 +126,50 @@ export const IS_CURRENT = `
     WHERE games.id = $1
     AND game_users.user_id = $2
     AND game_users.game_id = games.id`;
+
+export const CHECK_ROUND_COMPLETE = `
+  SELECT CASE 
+    WHEN COUNT(DISTINCT current_bet) = 1 
+    AND COUNT(*) = COUNT(CASE WHEN status = 'active' THEN 1 END)
+    THEN true 
+    ELSE false 
+  END as is_round_complete
+  FROM game_users 
+  WHERE game_id = $1 
+  AND status = 'active';
+`;
+
+export const DEAL_COMMUNITY_CARDS = `
+  WITH available_cards AS (
+    SELECT id 
+    FROM cards 
+    WHERE id NOT IN (
+      SELECT card_id FROM user_hands WHERE game_id = $1
+      UNION
+      SELECT card_id FROM community_cards WHERE game_id = $1
+    )
+    ORDER BY RANDOM()
+    LIMIT 
+      CASE 
+        WHEN $2 = 'flop' THEN 3
+        WHEN $2 IN ('turn', 'river') THEN 1
+        ELSE 0
+      END
+  )
+  INSERT INTO community_cards (game_id, card_id, stage)
+  SELECT $1, id, $2
+  FROM available_cards;
+`;
+
+export const GET_COMMUNITY_CARDS = `
+  SELECT cards.id, cards.value, cards.suit, community_cards.stage
+  FROM community_cards
+  JOIN cards ON community_cards.card_id = cards.id
+  WHERE game_id = $1
+  ORDER BY 
+    CASE community_cards.stage
+      WHEN 'flop' THEN 1
+      WHEN 'turn' THEN 2
+      WHEN 'river' THEN 3
+    END;
+`;
