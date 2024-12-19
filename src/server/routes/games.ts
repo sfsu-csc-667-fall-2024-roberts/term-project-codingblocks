@@ -203,9 +203,8 @@ router.post(
         }
     },
     broadcastGameUpdate,
-    async (req, res) => {
-        const { gameId } = req.params;
-        res.redirect(`/games/${gameId}`);
+    async (_req, res) => {
+        res.json({ success: true });
     },
 );
 
