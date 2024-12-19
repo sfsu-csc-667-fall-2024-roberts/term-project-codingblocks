@@ -5,19 +5,20 @@
             <li class="navbar-item">
                 <a href="/" class="navbar-link">Home</a>
             </li>
-            <% if (userLoggedIn) { %> <!-- User is logged in -->
-                <li class="navbar-item">
-                    <a href="/auth/logout" class="navbar-link">Logout</a>
-                </li>
-            <% } else { %> <!-- User is not logged in -->
-                <li class="navbar-item">
-                    <a href="/auth/login" class="navbar-link">Login</a>
-                </li>
-                <li class="navbar-item">
-                    <a href="/auth/register" class="navbar-link">Register</a>
-                </li>
+            <% if (userLoggedIn) { %>
+            <!-- User is logged in -->
+            <li class="navbar-item">
+                <a href="/auth/logout" class="navbar-link">Logout</a>
+            </li>
+            <% } else { %>
+            <!-- User is not logged in -->
+            <li class="navbar-item">
+                <a href="/auth/login" class="navbar-link">Login</a>
+            </li>
+            <li class="navbar-item">
+                <a href="/auth/register" class="navbar-link">Register</a>
+            </li>
             <% } %>
-
         </ul>
     </div>
 </nav>

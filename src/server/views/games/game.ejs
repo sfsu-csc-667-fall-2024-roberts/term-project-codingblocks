@@ -11,7 +11,10 @@
         <%- include('../partials/navbar.ejs') %>
         <div class="outsideContainer">
             <div class="container">
-                <h1>Poker Game <%= gameId %></h1>
+                <h1>
+                    Poker Game
+                    <%= gameId %>
+                </h1>
 
                 <div class="game-info">
                     <h2>Game Status</h2>
@@ -43,7 +46,9 @@
                     <h2>Players</h2>
                     <div class="players-list">
                         <% players.forEach(player => { %>
-                        <div class="player <%= player.is_current ? 'current-turn' : '' %>">
+                        <div
+                            class="player <%= player.is_current ? 'current-turn' : '' %>"
+                        >
                             <p>Player: <%= player.username %></p>
                             <p>Chips: $<%= player.chips %></p>
                             <p>Status: <%= player.status %></p>
@@ -73,36 +78,58 @@
                 <% if (gameDetails.current_stage !== 'waiting' && gameDetails.current_stage !== 'showdown') { %>
                 <div class="player-actions">
                     <h2>Actions</h2>
-                    <form action="/games/<%= gameId %>/action" method="POST" class="action-form">
+                    <form
+                        action="/games/<%= gameId %>/action"
+                        method="POST"
+                        class="action-form"
+                    >
                         <div class="action-buttons">
-                            <button type="submit" name="action" value="fold">Fold</button>
+                            <button type="submit" name="action" value="fold">
+                                Fold
+                            </button>
 
                             <% if (gameDetails.current_bet === 0) { %>
-                            <button type="submit" name="action"
-                                value="call">Call</button>
+                            <button type="submit" name="action" value="call">
+                                Call
+                            </button>
                             <% } else { %>
-                            <button type="submit" name="action" value="call">Call</button>
+                            <button type="submit" name="action" value="call">
+                                Call
+                            </button>
                             <% } %>
 
                             <div class="bet-action">
-                                <input type="number" name="amount" placeholder="Bet amount" min="1">
+                                <input
+                                    type="number"
+                                    name="amount"
+                                    placeholder="Bet amount"
+                                    min="1"
+                                />
                                 <% if (gameDetails.current_bet === 0) { %>
-                                <button type="submit" name="action" value="bet">Bet</button>
+                                <button type="submit" name="action" value="bet">
+                                    Bet
+                                </button>
                                 <% } else { %>
-                                <button type="submit" name="action" value="raise">Raise</button>
+                                <button
+                                    type="submit"
+                                    name="action"
+                                    value="raise"
+                                >
+                                    Raise
+                                </button>
                                 <% } %>
                             </div>
 
-                            <button type="submit" name="action" value="allin">All In</button>
+                            <button type="submit" name="action" value="allin">
+                                All In
+                            </button>
                         </div>
                     </form>
                 </div>
                 <% } %>
-
             </div>
-            <script src="/js/main.js">
-</script>
-            <script src="/js/games.js">
-</script>
+        </div>
+        <script src="/js/main.js"></script>
+        <script src="/js/games.js"></script>
     </body>
 </html>
