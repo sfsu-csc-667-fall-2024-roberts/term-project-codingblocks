@@ -1,19 +1,29 @@
 export type Card = {
     id: number;
-    value: number;
+    value: string;
+    suit: string;
 };
 
 export type Player = {
-    gravatar: string;
-    hand: Card[];
     id: number;
-    is_current: boolean;
-    last_draw_turn: number;
-    seat: number;
     username: string;
+    chips: number;
+    status: string;
+    current_bet: number;
+    is_current: boolean;
+    hand?: Card[];
+};
+
+export type GameDetails = {
+    current_stage: string;
+    pot: number;
+    current_bet: number;
+    winner_id?: number;
 };
 
 export type GameState = {
-    players: Omit<Player, "hand">[];
-    player: Player;
+    players: Player[];
+    player: Player & { hand: Card[] };
+    gameDetails: GameDetails;
+    communityCards: Card[];
 };
