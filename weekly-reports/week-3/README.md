@@ -11,4 +11,4 @@ Set up the skeleton and tooling for the front-end code.
 
 Milestones:  
 Milestone 3
-https://github.com/sfsu-csc-667-fall-2024-roberts/term-project-codingblocks/milestone/1 
+https://github.com/sfsu-csc-667-fall-2024-roberts/term-project-codingblocks/milestone/1
