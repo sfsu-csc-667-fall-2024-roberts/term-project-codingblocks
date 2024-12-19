@@ -3,6 +3,11 @@ import { GameState } from "../types";
 export const updateGame = (gameState: GameState) => {
     const { players, player, gameDetails, communityCards } = gameState;
 
+    if (gameDetails.current_stage === "showdown") {
+        window.location.href = `/games/${window.location.pathname.split("/").pop()}/winner`;
+        return;
+    }
+
     const gameInfo = document.querySelector(".game-info");
 
     if (gameInfo) {
