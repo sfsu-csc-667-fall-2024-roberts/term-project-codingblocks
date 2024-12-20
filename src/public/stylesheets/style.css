@@ -130,3 +130,38 @@ a:hover {
 .navbar-link:hover {
     color: #d9eaff;
 }
+
+.games-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.games-table th,
+.games-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.games-table th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+}
+
+.join-button {
+    display: inline-block;
+    padding: 6px 12px;
+    background-color: #4caf50;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+}
+
+.join-button:hover {
+    background-color: #45a049;
+}
+
+.available-games {
+    margin-top: 30px;
+}

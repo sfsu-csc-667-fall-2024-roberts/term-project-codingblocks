@@ -12,7 +12,7 @@
 
         <div class="outsideContainer">
             <div class="container">
-                <h1>Game Main Menu</h1>
+                <h1>Main Menu</h1>
                 <div class="lobby">
                     <h2>Create New Game</h2>
                     <form action="/lobby/create" method="POST">
@@ -37,6 +37,41 @@
                         </div>
                         <button type="submit">Create Game</button>
                     </form>
+
+                    <h2>Available Games</h2>
+                    <div class="available-games">
+                        <% if (games && games.length > 0) { %>
+                        <table class="games-table">
+                            <thead>
+                                <tr>
+                                    <th>Stage</th>
+                                    <th>Players</th>
+                                    <th>Pot</th>
+                                    <th>Join</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% games.forEach(game => { %>
+                                <tr>
+                                    <td><%= game.current_stage %></td>
+                                    <td><%= game.player_count %>/4</td>
+                                    <td>$<%= game.pot %></td>
+                                    <td>
+                                        <a
+                                            href="/games/<%= game.id %>/join"
+                                            class="join-button"
+                                        >
+                                            Join
+                                        </a>
+                                    </td>
+                                </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                        <% } else { %>
+                        <p>No active games available. Create a new one!</p>
+                        <% } %>
+                    </div>
                 </div>
             </div>
         </div>
