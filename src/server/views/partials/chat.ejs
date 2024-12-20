@@ -1,0 +1,18 @@
+<!doctype html>
+<template id="chat-message-template">
+    <li class="chat-message">
+        <span class="content"></span>
+    </li>
+</template>
+<aside id="chat-section">
+    <ul id="messages"></ul>
+    <form method="post">
+        <input
+            id="chat-message"
+            autocomplete="off"
+            placeholder="Type your message here"
+        />
+        <button>Send</button>
+    </form>
+</aside>
+<script src="/js/chat.js"></script>
