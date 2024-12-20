@@ -34,8 +34,11 @@ type Player = {
     is_current: boolean;
 };
 
-const createGame = async (): Promise<{ id: number }> => {
-    return await db.one(CREATE_GAME);
+const createGame = async (
+    lobbyName: string,
+    maxPlayers: number,
+): Promise<{ id: number }> => {
+    return await db.one(CREATE_GAME, [lobbyName, maxPlayers]);
 };
 
 const getCommunityCards = async (gameId: number, stage: GameStage) => {

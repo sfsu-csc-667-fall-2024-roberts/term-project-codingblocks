@@ -42,6 +42,7 @@
                         <table class="games-table">
                             <thead>
                                 <tr>
+                                    <th>Name</th>
                                     <th>Stage</th>
                                     <th>Players</th>
                                     <th>Pot</th>
@@ -51,8 +52,11 @@
                             <tbody>
                                 <% games.forEach(game => { %>
                                 <tr>
+                                    <td><%= game.lobby_name %></td>
                                     <td><%= game.current_stage %></td>
-                                    <td><%= game.player_count %>/4</td>
+                                    <td>
+                                        <%= game.player_count %>/<%= game.max_players %>
+                                    </td>
                                     <td>$<%= game.pot %></td>
                                     <td>
                                         <a

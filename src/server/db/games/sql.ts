@@ -1,6 +1,6 @@
 export const CREATE_GAME = `
-  INSERT INTO games (pot, current_stage) 
-  VALUES (0, 'waiting') 
+  INSERT INTO games (pot, current_stage, lobby_name, max_players) 
+  VALUES (0, 'waiting', $1, $2) 
   RETURNING id;
 `;
 
@@ -94,6 +94,8 @@ export const GET_GAME_DETAILS = `
     current_bet,
     minimum_bet,
     winner_id,
+    lobby_name,
+    max_players,
     created_at,
     updated_at
   FROM games
@@ -198,6 +200,8 @@ export const AVAILABLE_GAMES = `
     g.pot,
     g.current_stage,
     g.created_at,
+    g.lobby_name,
+    g.max_players,
     COUNT(gu.user_id) as player_count,
     COUNT(*) OVER() as total_count
   FROM games g
@@ -217,7 +221,7 @@ export const GET_RANDOM_GAME = `
     SELECT COUNT(*) 
     FROM game_users gu 
     WHERE gu.game_id = g.id
-  ) < 4
+  ) < g.max_players
   ORDER BY RANDOM()
   LIMIT 1;
 `;
