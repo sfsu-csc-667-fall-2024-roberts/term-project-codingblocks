@@ -17,6 +17,7 @@ import {
     GET_CURRENT_POT,
     UPDATE_POT,
     AVAILABLE_GAMES,
+    GET_RANDOM_GAME,
 } from "./sql";
 
 type GameStage = "waiting" | "preflop" | "flop" | "turn" | "river" | "showdown";
@@ -293,6 +294,11 @@ const getAvailableGames = async (
     };
 };
 
+const getRandomGame = async (): Promise<number | null> => {
+    const result = await db.oneOrNone(GET_RANDOM_GAME);
+    return result ? result.id : null;
+};
+
 export default {
     createGame,
     get,
@@ -313,4 +319,5 @@ export default {
     getCurrentPot,
     checkWinner,
     getAvailableGames,
+    getRandomGame,
 };

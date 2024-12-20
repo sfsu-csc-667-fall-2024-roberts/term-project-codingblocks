@@ -208,3 +208,16 @@ export const AVAILABLE_GAMES = `
   LIMIT $1 
   OFFSET $2;
 `;
+
+export const GET_RANDOM_GAME = `
+  SELECT id 
+  FROM games g
+  WHERE g.current_stage != 'showdown'
+  AND (
+    SELECT COUNT(*) 
+    FROM game_users gu 
+    WHERE gu.game_id = g.id
+  ) < 4
+  ORDER BY RANDOM()
+  LIMIT 1;
+`;

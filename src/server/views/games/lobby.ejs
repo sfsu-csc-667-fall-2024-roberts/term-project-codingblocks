@@ -38,6 +38,10 @@
                         <button type="submit">Create Game</button>
                     </form>
 
+                    <form action="/lobby/join-random" method="POST">
+                        <button type="submit">Join Random Game</button>
+                    </form>
+
                     <h2>Available Games</h2>
                     <div class="available-games">
                         <% if (games && games.length > 0) { %>
