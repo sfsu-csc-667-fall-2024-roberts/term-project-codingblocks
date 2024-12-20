@@ -68,6 +68,34 @@
                                 <% }); %>
                             </tbody>
                         </table>
+                        <% if (pagination && pagination.totalPages > 1) { %>
+                        <div class="pagination">
+                            <% if (pagination.currentPage > 1) { %>
+                            <a
+                                href="?page=<%= pagination.currentPage - 1 %>"
+                                class="page-link"
+                                >&laquo; Previous</a
+                            >
+                            <% } %>
+
+                            <% for(let i = 1; i <= pagination.totalPages; i++) { %>
+                            <a
+                                href="?page=<%= i %>"
+                                class="page-link <%= i === pagination.currentPage ? 'active' : '' %>"
+                            >
+                                <%= i %>
+                            </a>
+                            <% } %>
+
+                            <% if (pagination.currentPage < pagination.totalPages) { %>
+                            <a
+                                href="?page=<%= pagination.currentPage + 1 %>"
+                                class="page-link"
+                                >Next &raquo;</a
+                            >
+                            <% } %>
+                        </div>
+                        <% } %>
                         <% } else { %>
                         <p>No active games available. Create a new one!</p>
                         <% } %>

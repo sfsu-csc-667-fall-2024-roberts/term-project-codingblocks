@@ -35,14 +35,16 @@ router.get("/", async (req: Request, res: Response) => {
     try {
         // @ts-expect-error
         const { user } = req.session;
+        const page = parseInt(req.query.page as string) || 1;
 
-        const activeGames = await Games.getAvailableGames();
+        const { games, pagination } = await Games.getAvailableGames(page, 5);
 
         res.render("games/lobby", {
             title: "Game Lobby",
             user: user,
             userLoggedIn: true,
-            games: activeGames,
+            games,
+            pagination,
         });
     } catch (err) {
         console.error("Error loading lobby:", err);

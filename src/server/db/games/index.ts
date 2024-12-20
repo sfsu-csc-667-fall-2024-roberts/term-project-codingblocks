@@ -272,8 +272,25 @@ const checkWinner = async (gameId: number): Promise<boolean> => {
         });
 };
 
-const getAvailableGames = async () => {
-    return await db.any(AVAILABLE_GAMES);
+const getAvailableGames = async (
+    page: number = 1,
+    gamesPerPage: number = 5,
+) => {
+    const offset = (page - 1) * gamesPerPage;
+    const results = await db.any(AVAILABLE_GAMES, [gamesPerPage, offset]);
+    const totalCount =
+        results.length > 0 ? parseInt(results[0].total_count) : 0;
+    const totalPages = Math.ceil(totalCount / gamesPerPage);
+
+    return {
+        games: results,
+        pagination: {
+            currentPage: page,
+            totalPages,
+            gamesPerPage,
+            totalCount,
+        },
+    };
 };
 
 export default {

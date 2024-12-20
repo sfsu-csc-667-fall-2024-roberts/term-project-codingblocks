@@ -198,10 +198,13 @@ export const AVAILABLE_GAMES = `
     g.pot,
     g.current_stage,
     g.created_at,
-    COUNT(gu.user_id) as player_count
+    COUNT(gu.user_id) as player_count,
+    COUNT(*) OVER() as total_count
   FROM games g
   LEFT JOIN game_users gu ON g.id = gu.game_id
   WHERE g.current_stage != 'showdown'
   GROUP BY g.id
-  ORDER BY g.created_at DESC;
+  ORDER BY g.created_at DESC
+  LIMIT $1 
+  OFFSET $2;
 `;
