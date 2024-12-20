@@ -17,9 +17,9 @@ router.post("/create", async (req: Request, res: Response) => {
     try {
         // @ts-expect-error
         const { id: userId } = req.session.user;
+        const max = parseInt(maxPlayers) || 4;
 
-        // TODO: IMPLEMENT MAX PLAYERS IN createGame()
-        const game = await Games.createGame();
+        const game = await Games.createGame(name, max);
         await Games.joinGame(game.id, userId);
         return res.redirect(`/games/${game.id}`);
     } catch (err) {
@@ -59,11 +59,11 @@ router.post("/join-random", async (req: Request, res: Response) => {
 
         const gameId = await Games.getRandomGame();
 
-        // perhaps dont create one?
         if (!gameId) {
-            const game = await Games.createGame();
-            await Games.joinGame(game.id, userId);
-            return res.redirect(`/games/${game.id}`);
+            res.status(404).json({
+                message: "cannot find a random lobby to join",
+            });
+            return;
         }
 
         await Games.joinGame(gameId, userId);

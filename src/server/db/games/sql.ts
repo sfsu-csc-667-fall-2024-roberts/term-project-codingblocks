@@ -1,6 +1,6 @@
 export const CREATE_GAME = `
-  INSERT INTO games (pot, current_stage) 
-  VALUES (0, 'waiting') 
+  INSERT INTO games (pot, current_stage, lobby_name, max_players) 
+  VALUES (0, 'waiting', $1, $2) 
   RETURNING id;
 `;
 
