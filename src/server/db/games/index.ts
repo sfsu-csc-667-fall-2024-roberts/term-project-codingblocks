@@ -16,9 +16,22 @@ import {
     GET_HIGHEST_BET,
     GET_CURRENT_POT,
     UPDATE_POT,
+    AVAILABLE_GAMES,
+    GET_RANDOM_GAME,
 } from "./sql";
 
 type GameStage = "waiting" | "preflop" | "flop" | "turn" | "river" | "showdown";
+
+type Player = {
+    id: number;
+    username: string;
+    gravatar: string;
+    seat: number;
+    chips: number;
+    current_bet: number;
+    status: "active" | "folded" | "allin";
+    is_current: boolean;
+};
 
 const createGame = async (): Promise<{ id: number }> => {
     return await db.one(CREATE_GAME);
@@ -47,17 +60,6 @@ const get = async (gameId: number, playerId: number) => {
 
 const getGameDetails = async (gameId: number) => {
     return await db.one(GET_GAME_DETAILS, [gameId]);
-};
-
-type Player = {
-    id: number;
-    username: string;
-    gravatar: string;
-    seat: number;
-    chips: number;
-    current_bet: number;
-    status: "active" | "folded" | "allin";
-    is_current: boolean;
 };
 
 const getPlayers = async (gameId: number): Promise<Player[]> => {
@@ -271,6 +273,32 @@ const checkWinner = async (gameId: number): Promise<boolean> => {
         });
 };
 
+const getAvailableGames = async (
+    page: number = 1,
+    gamesPerPage: number = 5,
+) => {
+    const offset = (page - 1) * gamesPerPage;
+    const results = await db.any(AVAILABLE_GAMES, [gamesPerPage, offset]);
+    const totalCount =
+        results.length > 0 ? parseInt(results[0].total_count) : 0;
+    const totalPages = Math.ceil(totalCount / gamesPerPage);
+
+    return {
+        games: results,
+        pagination: {
+            currentPage: page,
+            totalPages,
+            gamesPerPage,
+            totalCount,
+        },
+    };
+};
+
+const getRandomGame = async (): Promise<number | null> => {
+    const result = await db.oneOrNone(GET_RANDOM_GAME);
+    return result ? result.id : null;
+};
+
 export default {
     createGame,
     get,
@@ -290,4 +318,6 @@ export default {
     updatePot,
     getCurrentPot,
     checkWinner,
+    getAvailableGames,
+    getRandomGame,
 };

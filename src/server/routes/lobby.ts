@@ -35,19 +35,45 @@ router.get("/", async (req: Request, res: Response) => {
     try {
         // @ts-expect-error
         const { user } = req.session;
+        const page = parseInt(req.query.page as string) || 1;
 
-        // TODO: show list of available games
-        // const activeGames = await Games.getActiveGames();
+        const { games, pagination } = await Games.getAvailableGames(page, 5);
 
         res.render("games/lobby", {
             title: "Game Lobby",
             user: user,
             userLoggedIn: true,
-            // activeGames: activeGames
+            games,
+            pagination,
         });
     } catch (err) {
         console.error("Error loading lobby:", err);
         res.redirect("/");
+    }
+});
+
+router.post("/join-random", async (req: Request, res: Response) => {
+    try {
+        // @ts-expect-error
+        const { id: userId } = req.session.user;
+
+        const gameId = await Games.getRandomGame();
+
+        // perhaps dont create one?
+        if (!gameId) {
+            const game = await Games.createGame();
+            await Games.joinGame(game.id, userId);
+            return res.redirect(`/games/${game.id}`);
+        }
+
+        await Games.joinGame(gameId, userId);
+        return res.redirect(`/games/${gameId}`);
+    } catch (err) {
+        console.error("somehow failed to join random game:", err);
+        res.status(500).json({
+            success: false,
+            message: "somehow failed to join random game",
+        });
     }
 });
 

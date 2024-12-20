@@ -12,7 +12,7 @@
 
         <div class="outsideContainer">
             <div class="container">
-                <h1>Game Main Menu</h1>
+                <h1>Main Menu</h1>
                 <div class="lobby">
                     <h2>Create New Game</h2>
                     <form action="/lobby/create" method="POST">
@@ -37,6 +37,73 @@
                         </div>
                         <button type="submit">Create Game</button>
                     </form>
+
+                    <form action="/lobby/join-random" method="POST">
+                        <button type="submit">Join Random Game</button>
+                    </form>
+
+                    <h2>Available Games</h2>
+                    <div class="available-games">
+                        <% if (games && games.length > 0) { %>
+                        <table class="games-table">
+                            <thead>
+                                <tr>
+                                    <th>Stage</th>
+                                    <th>Players</th>
+                                    <th>Pot</th>
+                                    <th>Join</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% games.forEach(game => { %>
+                                <tr>
+                                    <td><%= game.current_stage %></td>
+                                    <td><%= game.player_count %>/4</td>
+                                    <td>$<%= game.pot %></td>
+                                    <td>
+                                        <a
+                                            href="/games/<%= game.id %>/join"
+                                            class="join-button"
+                                        >
+                                            Join
+                                        </a>
+                                    </td>
+                                </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                        <% if (pagination && pagination.totalPages > 1) { %>
+                        <div class="pagination">
+                            <% if (pagination.currentPage > 1) { %>
+                            <a
+                                href="?page=<%= pagination.currentPage - 1 %>"
+                                class="page-link"
+                                >&laquo; Previous</a
+                            >
+                            <% } %>
+
+                            <% for(let i = 1; i <= pagination.totalPages; i++) { %>
+                            <a
+                                href="?page=<%= i %>"
+                                class="page-link <%= i === pagination.currentPage ? 'active' : '' %>"
+                            >
+                                <%= i %>
+                            </a>
+                            <% } %>
+
+                            <% if (pagination.currentPage < pagination.totalPages) { %>
+                            <a
+                                href="?page=<%= pagination.currentPage + 1 %>"
+                                class="page-link"
+                                >Next &raquo;</a
+                            >
+                            <% } %>
+                        </div>
+                        <% } %>
+                        <% } else { %>
+                        <p>No active games available. Create a new one!</p>
+                        <% } %>
+                    </div>
                 </div>
             </div>
         </div>

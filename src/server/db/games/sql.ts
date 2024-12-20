@@ -191,3 +191,33 @@ export const GET_CURRENT_POT = `
   FROM games
   WHERE id = $1;
 `;
+
+export const AVAILABLE_GAMES = `
+  SELECT 
+    g.id,
+    g.pot,
+    g.current_stage,
+    g.created_at,
+    COUNT(gu.user_id) as player_count,
+    COUNT(*) OVER() as total_count
+  FROM games g
+  LEFT JOIN game_users gu ON g.id = gu.game_id
+  WHERE g.current_stage != 'showdown'
+  GROUP BY g.id
+  ORDER BY g.created_at DESC
+  LIMIT $1 
+  OFFSET $2;
+`;
+
+export const GET_RANDOM_GAME = `
+  SELECT id 
+  FROM games g
+  WHERE g.current_stage != 'showdown'
+  AND (
+    SELECT COUNT(*) 
+    FROM game_users gu 
+    WHERE gu.game_id = g.id
+  ) < 4
+  ORDER BY RANDOM()
+  LIMIT 1;
+`;

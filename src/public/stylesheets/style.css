@@ -130,3 +130,64 @@ a:hover {
 .navbar-link:hover {
     color: #d9eaff;
 }
+
+.games-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.games-table th,
+.games-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.games-table th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+}
+
+.join-button {
+    display: inline-block;
+    padding: 6px 12px;
+    background-color: #4caf50;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+}
+
+.join-button:hover {
+    background-color: #45a049;
+}
+
+.available-games {
+    margin-top: 30px;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+    gap: 10px;
+}
+
+.page-link {
+    padding: 8px 12px;
+    border: 1px solid gray;
+    border-radius: 4px;
+    text-decoration: none;
+    color: black;
+}
+
+.page-link:hover {
+    background-color: #f5f5f5;
+}
+
+.page-link.active {
+    background-color: #007bff;
+    color: white;
+    border-color: blue;
+}
