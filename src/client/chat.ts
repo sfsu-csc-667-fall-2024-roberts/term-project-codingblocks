@@ -39,7 +39,8 @@ window.socket.on(
         ) as HTMLElement;
 
         const span = messageElement.querySelector("span")!;
-        span.textContent = message;
+        const chatMessage = sender + ": " + message;
+        span.textContent = chatMessage;
 
         if (sender === "system") {
             span.classList.add("text-red-500");
