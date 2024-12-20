@@ -1,4 +1,5 @@
 import db from "../connection";
+import { compareHands, evaluateHand } from "./hand";
 import {
     CREATE_GAME,
     ADD_PLAYER,
@@ -229,37 +230,79 @@ const getCurrentPot = async (gameId: number): Promise<number> => {
 const checkWinner = async (gameId: number): Promise<boolean> => {
     return db
         .tx(async (t) => {
-            const result = await t.one(
-                `
-            SELECT CAST(COUNT(*) AS INTEGER) as active_count 
-            FROM game_users 
-            WHERE game_id = $1 
-            AND status = 'active'
-            `,
+            const activePlayers = await t.any(
+                `SELECT user_id 
+             FROM game_users 
+             WHERE game_id = $1 
+             AND status = 'active'`,
                 [gameId],
             );
 
-            if (Number(result.active_count) === 1) {
-                const winner = await t.one(
-                    `
-                SELECT user_id 
-                FROM game_users 
-                WHERE game_id = $1 
-                AND status = 'active'
-                `,
+            if (Number(activePlayers.length) === 1) {
+                await t.none(
+                    `UPDATE games 
+                 SET current_stage = 'showdown',
+                     winner_id = $1
+                 WHERE id = $2`,
+                    [activePlayers[0].user_id, gameId],
+                );
+                return true;
+            }
+
+            const gameState = await t.one(
+                `SELECT current_stage FROM games WHERE id = $1`,
+                [gameId],
+            );
+
+            if (gameState.current_stage === "showdown") {
+                const communityCards = await t.any(
+                    `SELECT c.* 
+                 FROM community_cards cc
+                 JOIN cards c ON cc.card_id = c.id
+                 WHERE cc.game_id = $1
+                 ORDER BY cc.stage`,
                     [gameId],
                 );
 
-                await t.one(
-                    `
-                UPDATE games 
-                SET 
-                    current_stage = 'showdown',
-                    winner_id = $1
-                WHERE id = $2
-                RETURNING id, current_stage, winner_id
-                `,
-                    [winner.user_id, gameId],
+                const playerHands = await Promise.all(
+                    activePlayers.map(async (player) => {
+                        const playerCards = await t.any(
+                            `SELECT c.* 
+                         FROM user_hands uh
+                         JOIN cards c ON uh.card_id = c.id
+                         WHERE uh.game_id = $1 AND uh.user_id = $2
+                         ORDER BY uh.card_order`,
+                            [gameId, player.user_id],
+                        );
+
+                        const evaluation = evaluateHand(
+                            playerCards,
+                            communityCards,
+                        );
+
+                        console.log(evaluation);
+
+                        return {
+                            userId: player.user_id,
+                            handEval: evaluation,
+                        };
+                    }),
+                );
+
+                const winner = playerHands.reduce((best, current) => {
+                    const comparison = compareHands(
+                        current.handEval,
+                        best.handEval,
+                    );
+                    return comparison > 0 ? current : best;
+                });
+
+                await t.none(
+                    `UPDATE games 
+                 SET current_stage = 'showdown',
+                     winner_id = $1
+                 WHERE id = $2`,
+                    [winner.userId, gameId],
                 );
 
                 return true;
