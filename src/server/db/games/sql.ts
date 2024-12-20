@@ -191,3 +191,17 @@ export const GET_CURRENT_POT = `
   FROM games
   WHERE id = $1;
 `;
+
+export const AVAILABLE_GAMES = `
+  SELECT 
+    g.id,
+    g.pot,
+    g.current_stage,
+    g.created_at,
+    COUNT(gu.user_id) as player_count
+  FROM games g
+  LEFT JOIN game_users gu ON g.id = gu.game_id
+  WHERE g.current_stage != 'showdown'
+  GROUP BY g.id
+  ORDER BY g.created_at DESC;
+`;

@@ -16,9 +16,21 @@ import {
     GET_HIGHEST_BET,
     GET_CURRENT_POT,
     UPDATE_POT,
+    AVAILABLE_GAMES,
 } from "./sql";
 
 type GameStage = "waiting" | "preflop" | "flop" | "turn" | "river" | "showdown";
+
+type Player = {
+    id: number;
+    username: string;
+    gravatar: string;
+    seat: number;
+    chips: number;
+    current_bet: number;
+    status: "active" | "folded" | "allin";
+    is_current: boolean;
+};
 
 const createGame = async (): Promise<{ id: number }> => {
     return await db.one(CREATE_GAME);
@@ -47,17 +59,6 @@ const get = async (gameId: number, playerId: number) => {
 
 const getGameDetails = async (gameId: number) => {
     return await db.one(GET_GAME_DETAILS, [gameId]);
-};
-
-type Player = {
-    id: number;
-    username: string;
-    gravatar: string;
-    seat: number;
-    chips: number;
-    current_bet: number;
-    status: "active" | "folded" | "allin";
-    is_current: boolean;
 };
 
 const getPlayers = async (gameId: number): Promise<Player[]> => {
@@ -271,6 +272,10 @@ const checkWinner = async (gameId: number): Promise<boolean> => {
         });
 };
 
+const getAvailableGames = async () => {
+    return await db.any(AVAILABLE_GAMES);
+};
+
 export default {
     createGame,
     get,
@@ -290,4 +295,5 @@ export default {
     updatePot,
     getCurrentPot,
     checkWinner,
+    getAvailableGames,
 };
