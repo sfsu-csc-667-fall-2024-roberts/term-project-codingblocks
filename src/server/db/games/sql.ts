@@ -208,6 +208,7 @@ export const AVAILABLE_GAMES = `
   LEFT JOIN game_users gu ON g.id = gu.game_id
   WHERE g.current_stage != 'showdown'
   GROUP BY g.id
+  HAVING COUNT(gu.user_id) < g.max_players
   ORDER BY g.created_at DESC
   LIMIT $1 
   OFFSET $2;
