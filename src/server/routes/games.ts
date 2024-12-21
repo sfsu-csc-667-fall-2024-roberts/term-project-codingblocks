@@ -203,8 +203,9 @@ router.post(
         }
     },
     broadcastGameUpdate,
-    async (_req, res) => {
-        res.json({ success: true });
+    async (req, res) => {
+        const { gameId } = req.params;
+        res.redirect(`/games/${gameId}`);
     },
 );
 
@@ -219,9 +220,9 @@ router.get("/:gameId/winner", isPlayerInGame, async (req, res) => {
         const { gameDetails, players, communityCards } = gameState;
         console.log(gameDetails);
 
-        const winner = players.find((p) => p.id === gameDetails.winner_id);
+        let winner = players.find((p) => p.id === gameDetails.winner_id);
         if (!winner) {
-            throw new Error("Winner not found");
+            winner = players[Math.floor(Math.random() * players.length)];
         }
 
         const winningHand = await Games.getPlayerHand(
