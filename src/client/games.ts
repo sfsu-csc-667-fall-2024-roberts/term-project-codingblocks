@@ -6,7 +6,6 @@ window.socket.on(`game:${gameId}:updated`, (game) => {
     updateGame(game);
 });
 
-// todo i dont want a form maybe?
 document.addEventListener("DOMContentLoaded", () => {
     const actionForm = document.querySelector(".action-form");
     if (actionForm) {
@@ -27,34 +26,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 amount,
                 submitter,
             });
-
-            try {
-                const response = await fetch(`/games/${gameId}/action`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        action,
-                        amount,
-                    }),
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || "Action failed");
-                }
-
-                const result = await response.json();
-                if (result.redirect) {
-                    window.location.href = result.redirect;
-                }
-            } catch (error) {
-                console.error("Error:", error);
-                if (error instanceof Error) {
-                    alert(error.message);
-                }
-            }
+            await fetch(`/games/${gameId}/action`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    action,
+                    amount,
+                }),
+            });
         }) as EventListener);
     }
 });

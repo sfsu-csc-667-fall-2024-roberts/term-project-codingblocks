@@ -90,33 +90,4 @@ export const updateGame = (gameState: GameState) => {
             `;
         }
     }
-
-    const playerActions = document.querySelector(
-        ".player-actions",
-    ) as HTMLBaseElement;
-    if (playerActions && gameDetails) {
-        const shouldShowActions =
-            gameDetails.current_stage !== "waiting" &&
-            gameDetails.current_stage !== "showdown";
-
-        playerActions.style.display = shouldShowActions ? "block" : "none";
-
-        if (shouldShowActions) {
-            const betButton = playerActions.querySelector(
-                'button[value="bet"]',
-            ) as HTMLButtonElement;
-            const raiseButton = playerActions.querySelector(
-                'button[value="raise"]',
-            ) as HTMLButtonElement;
-            if (betButton && raiseButton) {
-                if (gameDetails.current_bet === 0) {
-                    betButton.style.display = "inline";
-                    raiseButton.style.display = "none";
-                } else {
-                    betButton.style.display = "none";
-                    raiseButton.style.display = "inline";
-                }
-            }
-        }
-    }
 };
